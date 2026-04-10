@@ -14,16 +14,16 @@ using Printf
 # =============================================================================
 
 # --- Physical parameters ---
-const Lx = 20.0       # m, domain length
-const H  = 2.0        # m, domain depth
-const U∞ = 1.0        # m/s, inflow velocity
+Lx = 20.0       # m, domain length
+H  = 2.0        # m, domain depth
+U∞ = 1.0        # m/s, inflow velocity
 
 # Seamount geometry
-const x₀ = Lx / 3    # center position
-const h₀ = 0.6H      # peak height above the bottom  (= 0.6 * H above z = -H)
-const σ  = Lx / 10   # horizontal half-width
+x₀ = Lx / 3    # center position
+h₀ = 0.6H      # peak height above the bottom  (= 0.6 * H above z = -H)
+σ  = Lx / 10   # horizontal half-width
 
-seamount(x, y) = h₀ * exp(-((x - x₀) / σ)^2) - H   # returns z_bottom(x)
+seamount(x, y, p) = p.h₀ * exp(-((x - p.x₀) / p.σ)^2) - p.H   # returns z_bottom(x)
 
 # --- Grid ---
 Nx, Nz = 128, 32
@@ -34,7 +34,8 @@ underlying_grid = RectilinearGrid(size     = (Nx, Nz),
                                   topology = (Bounded, Flat, Bounded),
                                   halo     = (6, 6))
 
-grid = ImmersedBoundaryGrid(underlying_grid, GridFittedBottom(seamount))
+seamount_params = (; x₀, h₀, σ, H)
+grid = ImmersedBoundaryGrid(underlying_grid, GridFittedBottom((x, y) -> seamount(x, y, seamount_params)))
 
 # --- Pressure solver (required for non-periodic x topology) ---
 pressure_solver = ConjugateGradientPoissonSolver(grid;
