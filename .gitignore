@@ -1,0 +1,24 @@
+# Julia
+*.jl.cov
+*.jl.*.cov
+*.jl.mem
+Manifest.toml
+
+# Output files
+*.nc
+*.jld2
+*.h5
+*.hdf5
+
+# Plots
+*.png
+*.pdf
+*.svg
+*.mp4
+*.gif
+
+# Logs
+*.log
+
+# OS
+.DS_Store
