@@ -32,11 +32,9 @@ grid = RectilinearGrid(size  = (Nx, Ny, Nz),
                        topology = (Periodic, Periodic, Bounded))
 
 # --- Quadratic bottom drag (applied as a bottom flux) ---
-@inline drag_u(x, y, t, u, v, p) = -p.Cd * u * sqrt(u^2 + v^2)
-@inline drag_v(x, y, t, u, v, p) = -p.Cd * v * sqrt(u^2 + v^2)
-
-u_bcs = FieldBoundaryConditions(bottom = FluxBoundaryCondition(drag_u, field_dependencies=(:u, :v), parameters=(; Cd)))
-v_bcs = FieldBoundaryConditions(bottom = FluxBoundaryCondition(drag_v, field_dependencies=(:u, :v), parameters=(; Cd)))
+drag = BulkDrag(coefficient=Cd)
+u_bcs = FieldBoundaryConditions(bottom = drag)
+v_bcs = FieldBoundaryConditions(bottom = drag)
 
 # --- Pressure-gradient body force (drives flow in x) ---
 @inline pressure_forcing(x, y, z, t, p) = p.F₀
