@@ -9,14 +9,6 @@ Tutorial materials for the **Large-Eddy Simulation (LES) with Oceananigans** ses
 
 This free seminar explores how modern programming tools are transforming complex fluid simulations, bridging the gap between ease of use and the extreme performance required in the field.
 
-**Morning (9h – 11h30)**
-- Introduction to [Oceananigans.jl](https://github.com/CliMA/Oceananigans.jl) for multi-scale fluid simulations — *Tomás Chor*
-- The Chapel language for high-productivity parallel computing in scientific computing — *Nelson Dias*
-
-**Afternoon (14h – 17h)**
-- Introductory LES tutorial with Oceananigans *(this repo)* — *Tomás Chor*
-- Chapel applications in fluid mechanics — *Anna Caroline de Jesus*
-
 ## This repository
 
 This repo contains the tutorial scripts used in the afternoon hands-on session. Each subdirectory is a self-contained example that can be run interactively in a Julia REPL or executed as a script.
@@ -31,12 +23,13 @@ This repo contains the tutorial scripts used in the afternoon hands-on session. 
 - [Julia](https://julialang.org/downloads/) (1.10 or later recommended)
 - [Oceananigans.jl](https://github.com/CliMA/Oceananigans.jl)
 - [NCDatasets.jl](https://github.com/Alexander-Barth/NCDatasets.jl)
+- [CairoMakie.jl](https://github.com/MakieOrg/Makie.jl) (for plotting)
 
 Install dependencies from the Julia REPL:
 
 ```julia
 using Pkg
-Pkg.add(["Oceananigans", "NCDatasets"])
+Pkg.add(["Oceananigans", "NCDatasets", "CairoMakie"])
 ```
 
 ## Running the examples
