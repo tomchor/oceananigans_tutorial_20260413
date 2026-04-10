@@ -4,10 +4,10 @@ using NCDatasets
 using Printf
 
 # =============================================================================
-# Flow past a Gaussian seamount
+# Flow past a Gaussian hill
 #
 # A 3-D nonhydrostatic simulation with open east/west boundaries.
-# A background flow U∞ enters from the west, goes over a seamount, and exits
+# A background flow U∞ enters from the west, goes over a hill, and exits
 # to the east.  The immersed boundary method handles the topography.
 #
 # Stratification (N² > 0) can be added to show internal wave generation.
@@ -19,12 +19,12 @@ Ly = Lx/2
 H  = 2.0
 U∞ = 1.0
 
-# Seamount geometry (axisymmetric Gaussian, centered in the domain)
+# Hill geometry (axisymmetric Gaussian, centered in the domain)
 x₀ = 0.0        # x center position
 h₀ = 0.6H       # peak height above the bottom
 σ  = Lx / 10    # horizontal half-width
 
-seamount(x, y, p) = p.h₀ * exp(-((x - p.x₀)^2 + y^2) / p.σ^2) - p.H   # returns z_bottom(x, y)
+hill(x, y, p) = p.h₀ * exp(-((x - p.x₀)^2 + y^2) / p.σ^2) - p.H   # returns z_bottom(x, y)
 
 # --- Grid ---
 Nx, Ny, Nz = 128, 128, 32
@@ -36,8 +36,8 @@ underlying_grid = RectilinearGrid(size     = (Nx, Ny, Nz),
                                   topology = (Bounded, Periodic, Bounded),
                                   halo     = (6, 6, 6))
 
-seamount_params = (; x₀, h₀, σ, H)
-grid = ImmersedBoundaryGrid(underlying_grid, GridFittedBottom((x, y) -> seamount(x, y, seamount_params)))
+hill_params = (; x₀, h₀, σ, H)
+grid = ImmersedBoundaryGrid(underlying_grid, GridFittedBottom((x, y) -> hill(x, y, hill_params)))
 
 # --- Open boundary conditions on east/west faces ---
 u_bcs = FieldBoundaryConditions(west = OpenBoundaryCondition(U∞),
@@ -75,7 +75,7 @@ u, v, w = model.velocities
 simulation.output_writers[:fields] = NetCDFWriter(model,
     (; u, v, w, ωy, ωz),
     schedule           = TimeInterval(0.5),
-    filename           = "seamount_flow.nc",
+    filename           = "hill_flow.nc",
     overwrite_existing = true)
 
 run!(simulation)

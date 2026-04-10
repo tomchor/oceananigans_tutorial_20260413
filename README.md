@@ -16,7 +16,7 @@ This repo contains the tutorial scripts used in the afternoon hands-on session. 
 | Directory | Description |
 |---|---|
 | `channel_flow_les/` | Doubly-periodic LES channel flow driven by a pressure-gradient body force and damped by quadratic bottom drag, with a passive tracer |
-| `seamount_flow/` | 2-D nonhydrostatic flow past a Gaussian seamount using the immersed boundary method |
+| `hill_flow/` | 3-D nonhydrostatic flow past a Gaussian hill using the immersed boundary method |
 
 ## Prerequisites
 
@@ -38,7 +38,7 @@ Each script can be run from the Julia REPL (recommended for interactive explorat
 
 ```bash
 julia channel_flow_les/channel_flow_les.jl
-julia seamount_flow/seamount_flow.jl
+julia hill_flow/hill_flow.jl
 ```
 
 Because the scripts avoid module-level constants, you can freely modify parameters and re-`include` them in the same REPL session without restarting Julia.

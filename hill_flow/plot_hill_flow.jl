@@ -2,20 +2,20 @@ using CairoMakie
 using NCDatasets
 
 # =============================================================================
-# Animate xz vorticity from seamount_flow.jl output.
-# Run seamount_flow.jl first to produce seamount_flow.nc.
+# Animate xz vorticity from hill_flow.jl output.
+# Run hill_flow.jl first to produce hill_flow.nc.
 # =============================================================================
 
-# --- Seamount geometry (must match seamount_flow.jl) ---
+# --- Seamount geometry (must match hill_flow.jl) ---
 const Lx = 20.0
 const H  = 2.0
 const x₀ = Lx / 3
 const h₀ = 0.6H
 const σ  = Lx / 10
-seamount(x) = h₀ * exp(-((x - x₀) / σ)^2) - H
+hill(x) = h₀ * exp(-((x - x₀) / σ)^2) - H
 
 # --- Load data ---
-ds = NCDataset("seamount_flow.nc")
+ds = NCDataset("hill_flow.nc")
 
 x = ds["xC"][:]   # cell-center x
 z = ds["zC"][:]   # cell-center z
@@ -29,9 +29,9 @@ close(ds)
 
 Nt = length(t)
 
-# Mask immersed (below seamount) cells with NaN
+# Mask immersed (below hill) cells with NaN
 for k in axes(ω, 2), i in axes(ω, 1)
-    if z[k] < seamount(x[i])
+    if z[k] < hill(x[i])
         ω[i, k, :] .= NaN
         u[i, k, :] .= NaN
     end
@@ -56,14 +56,14 @@ Label(fig[0, 1], title_str, fontsize=18)
 hm = heatmap!(ax, x, z, ω_plt; colormap=:vik, colorrange=(-ω_lim, ω_lim))
 Colorbar(fig[1, 2], hm; label="ω (s⁻¹)")
 
-# Overlay seamount profile
+# Overlay hill profile
 x_fine = range(0, Lx, length=500)
-z_bottom = seamount.(x_fine)
+z_bottom = hill.(x_fine)
 band!(ax, x_fine, fill(-H, length(x_fine)), z_bottom; color=(:gray, 0.8))
 
 # --- Record animation ---
-record(fig, "seamount_flow.mp4", 1:Nt; framerate=20) do nn
+record(fig, "hill_flow.mp4", 1:Nt; framerate=20) do nn
     n[] = nn
 end
 
-@info "Animation saved to seamount_flow.mp4"
+@info "Animation saved to hill_flow.mp4"
