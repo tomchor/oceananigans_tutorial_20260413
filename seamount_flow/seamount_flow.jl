@@ -46,7 +46,7 @@ pressure_solver = ConjugateGradientPoissonSolver(grid;
 
 # --- Open boundary conditions on east/west faces ---
 u_bcs = FieldBoundaryConditions(west = OpenBoundaryCondition(U∞),
-                                east = OpenBoundaryCondition(U∞))
+                                east = OpenBoundaryCondition(U∞, scheme = PerturbationAdvection()))
 
 # --- Model ---
 model = NonhydrostaticModel(grid;
