@@ -1,5 +1,5 @@
 using Oceananigans
-using Oceananigans.Solvers: ConjugateGradientPoissonSolver, fft_poisson_solver
+using Oceananigans.Solvers: ConjugateGradientPoissonSolver
 using NCDatasets
 using Printf
 
@@ -14,10 +14,10 @@ using Printf
 # =============================================================================
 
 # --- Physical parameters ---
-Lx = 20.0       # m, domain length (x)
-Ly = Lx         # m, domain width  (y)
-H  = 2.0        # m, domain depth
-U∞ = 1.0        # m/s, inflow velocity
+Lx = 20.0
+Ly = Lx/2
+H  = 2.0
+U∞ = 1.0
 
 # Seamount geometry (axisymmetric Gaussian, centered in the domain)
 x₀ = 0.0        # x center position
@@ -39,18 +39,13 @@ underlying_grid = RectilinearGrid(size     = (Nx, Ny, Nz),
 seamount_params = (; x₀, h₀, σ, H)
 grid = ImmersedBoundaryGrid(underlying_grid, GridFittedBottom((x, y) -> seamount(x, y, seamount_params)))
 
-# --- Pressure solver (required for non-periodic x topology) ---
-pressure_solver = ConjugateGradientPoissonSolver(grid;
-    maxiter        = 10,
-    preconditioner = fft_poisson_solver(underlying_grid))
-
 # --- Open boundary conditions on east/west faces ---
 u_bcs = FieldBoundaryConditions(west = OpenBoundaryCondition(U∞),
                                 east = OpenBoundaryCondition(U∞, scheme = PerturbationAdvection()))
 
 # --- Model ---
 model = NonhydrostaticModel(grid;
-                            pressure_solver,
+                            #pressure_solver= ConjugateGradientPoissonSolver(grid; maxiter = 10),
                             boundary_conditions = (u=u_bcs,),
                             advection           = WENO(order=5),
                             timestepper         = :RungeKutta3)
@@ -66,7 +61,7 @@ wall_clock = Ref(time_ns())
 function progress(sim)
     u = sim.model.velocities.u
     elapsed = prettytime(1e-9 * (time_ns() - wall_clock[]))
-    @info @sprintf("t = %s, Δt = %s, max|u| = %.3f, wall time = %s",
+    @info @sprintf("t = %s, Δt = %s, max|u| = %.3f, elapsed wall time = %s",
                    prettytime(time(sim)), prettytime(sim.Δt), maximum(abs, u), elapsed)
     wall_clock[] = time_ns()
 end
