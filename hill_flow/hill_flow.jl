@@ -18,6 +18,7 @@ Lx = 20.0
 Ly = Lx/2
 H  = 2.0
 U∞ = 1.0
+Cd = 1e-3       # quadratic bottom drag coefficient
 
 # Hill geometry (axisymmetric Gaussian, centered in the domain)
 x₀ = 0.0        # x center position
@@ -39,14 +40,17 @@ underlying_grid = RectilinearGrid(size     = (Nx, Ny, Nz),
 hill_params = (; x₀, h₀, σ, H)
 grid = ImmersedBoundaryGrid(underlying_grid, GridFittedBottom((x, y) -> hill(x, y, hill_params)))
 
-# --- Open boundary conditions on east/west faces ---
-u_bcs = FieldBoundaryConditions(west = OpenBoundaryCondition(U∞),
-                                east = OpenBoundaryCondition(U∞, scheme = PerturbationAdvection()))
+# --- Boundary conditions ---
+drag  = BulkDrag(coefficient=Cd)
+u_bcs = FieldBoundaryConditions(west   = OpenBoundaryCondition(U∞),
+                                east   = OpenBoundaryCondition(U∞, scheme = PerturbationAdvection()),
+                                bottom = drag)
+v_bcs = FieldBoundaryConditions(bottom = drag)
 
 # --- Model ---
 model = NonhydrostaticModel(grid;
                             #pressure_solver= ConjugateGradientPoissonSolver(grid; maxiter = 10),
-                            boundary_conditions = (u=u_bcs,),
+                            boundary_conditions = (u=u_bcs, v=v_bcs),
                             advection           = WENO(order=5),
                             timestepper         = :RungeKutta3)
 
