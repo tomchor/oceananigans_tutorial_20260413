@@ -13,14 +13,14 @@ using Printf
 # =============================================================================
 
 # --- Physical parameters ---
-const Lx = 2π          # m, domain length (zonal)
-const Ly = 2π          # m, domain length (meridional)
-const H  = 1.0         # m, depth
-const U₀ = 1.0         # m/s, target mean velocity
-const Cd = 1e-2        # quadratic drag coefficient
+Lx = 2π          # m, domain length (zonal)
+Ly = 2π          # m, domain length (meridional)
+H  = 1.0         # m, depth
+U₀ = 1.0         # m/s, target mean velocity
+Cd = 1e-2        # quadratic drag coefficient
 
 # Equilibrium forcing: balances drag at mean flow U₀  (F₀ = Cd U₀² / H)
-const F₀ = Cd * U₀^2 / H
+F₀ = Cd * U₀^2 / H
 
 # --- Grid ---
 Nx, Ny, Nz = 64, 64, 32
@@ -32,14 +32,14 @@ grid = RectilinearGrid(size  = (Nx, Ny, Nz),
                        topology = (Periodic, Periodic, Bounded))
 
 # --- Quadratic bottom drag (applied as a bottom flux) ---
-@inline drag_u(x, y, t, u, v) = -Cd * u * sqrt(u^2 + v^2)
-@inline drag_v(x, y, t, u, v) = -Cd * v * sqrt(u^2 + v^2)
+@inline drag_u(x, y, t, u, v, p) = -p.Cd * u * sqrt(u^2 + v^2)
+@inline drag_v(x, y, t, u, v, p) = -p.Cd * v * sqrt(u^2 + v^2)
 
-u_bcs = FieldBoundaryConditions(bottom = FluxBoundaryCondition(drag_u, field_dependencies=(:u, :v)))
-v_bcs = FieldBoundaryConditions(bottom = FluxBoundaryCondition(drag_v, field_dependencies=(:u, :v)))
+u_bcs = FieldBoundaryConditions(bottom = FluxBoundaryCondition(drag_u, field_dependencies=(:u, :v), parameters=(; Cd)))
+v_bcs = FieldBoundaryConditions(bottom = FluxBoundaryCondition(drag_v, field_dependencies=(:u, :v), parameters=(; Cd)))
 
 # --- Pressure-gradient body force (drives flow in x) ---
-@inline pressure_forcing(x, y, z, t) = F₀
+@inline pressure_forcing(x, y, z, t, p) = p.F₀
 
 # --- Model ---
 model = NonhydrostaticModel(; grid,
@@ -48,7 +48,7 @@ model = NonhydrostaticModel(; grid,
                               timestepper          = :RungeKutta3,
                               tracers              = :c,
                               boundary_conditions  = (u=u_bcs, v=v_bcs),
-                              forcing              = (u=Forcing(pressure_forcing),))
+                              forcing              = (u=Forcing(pressure_forcing, parameters=(; F₀)),))
 
 # --- Initial conditions ---
 uᵢ(x, y, z) = U₀ * (1 + 0.05 * randn())
