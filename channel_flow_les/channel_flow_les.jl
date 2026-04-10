@@ -13,22 +13,22 @@ using Printf
 # =============================================================================
 
 # --- Physical parameters ---
-Lx = 2π          # m, domain length (zonal)
-Ly = 2π          # m, domain length (meridional)
-H  = 1.0         # m, depth
-U₀ = 1.0         # m/s, target mean velocity
-Cd = 1e-2        # quadratic drag coefficient
+Lx = 2π
+Ly = π
+H  = 1
+U₀ = 1
+Cd = 1e-2 # quadratic drag coefficient
 
 # Equilibrium forcing: balances drag at mean flow U₀  (F₀ = Cd U₀² / H)
 F₀ = Cd * U₀^2 / H
 
 # --- Grid ---
-Nx, Ny, Nz = 64, 64, 32
+Nx, Ny, Nz = 64, 32, 32
 
 grid = RectilinearGrid(size  = (Nx, Ny, Nz),
                        x     = (0, Lx),
                        y     = (0, Ly),
-                       z     = (-H, 0),
+                       z     = (0, H),
                        topology = (Periodic, Periodic, Bounded))
 
 # --- Quadratic bottom drag (applied as a bottom flux) ---
@@ -49,7 +49,7 @@ model = NonhydrostaticModel(grid;
                             forcing              = (u=Forcing(pressure_forcing, parameters=(; F₀)),))
 
 # --- Initial conditions ---
-uᵢ(x, y, z) = U₀ * (1 + 0.05 * randn())
+uᵢ(x, y, z) = U₀ * (1 + 0.05 * randn() * exp(-z/(H/4)))
 cᵢ(x, y, z) = exp(-((x - Lx/4)^2 + (y - Ly/4)^2) / (Lx/8)^2)  # Gaussian tracer blob
 set!(model, u=uᵢ, c=cᵢ)
 
@@ -67,15 +67,22 @@ function progress(sim)
 end
 add_callback!(simulation, progress, IterationInterval(100))
 
-# --- Output: surface (xy) slice ---
+# --- Output ---
 u, v, w = model.velocities
-ζ = Field(∂x(v) - ∂y(u))   # vertical vorticity at the surface
+ζ = Field(∂x(v) - ∂y(u))   # vertical vorticity
 
 simulation.output_writers[:surface] = NetCDFWriter(model,
     merge(model.velocities, model.tracers, (; ζ)),
-    schedule         = TimeInterval(1.0),
-    filename         = "channel_flow_surface.nc",
-    indices          = (:, :, Nz),       # save only the surface layer
-    overwrite_existing = true)
+    schedule            = TimeInterval(1.0),
+    filename            = "channel_flow_surface.nc",
+    indices             = (:, :, Nz),       # surface (xy) slice
+    overwrite_existing  = true)
+
+simulation.output_writers[:xz_slice] = NetCDFWriter(model,
+    merge(model.velocities, model.tracers),
+    schedule            = TimeInterval(1.0),
+    filename            = "channel_flow_xz.nc",
+    indices             = (:, Ny÷2, :),     # xz slice at mid-domain y
+    overwrite_existing  = true)
 
 run!(simulation)
