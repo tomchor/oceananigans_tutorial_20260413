@@ -42,13 +42,13 @@ v_bcs = FieldBoundaryConditions(bottom = FluxBoundaryCondition(drag_v, field_dep
 @inline pressure_forcing(x, y, z, t) = F₀
 
 # --- Model ---
-model = NonhydrostaticModel(; grid,
-                              closure              = SmagorinskyLilly(),
-                              advection            = WENO(order=5),
-                              timestepper          = :RungeKutta3,
-                              tracers              = :c,
-                              boundary_conditions  = (u=u_bcs, v=v_bcs),
-                              forcing              = (u=Forcing(pressure_forcing),))
+model = NonhydrostaticModel(grid;
+                            closure              = SmagorinskyLilly(),
+                            advection            = WENO(order=5),
+                            timestepper          = :RungeKutta3,
+                            tracers              = :c,
+                            boundary_conditions  = (u=u_bcs, v=v_bcs),
+                            forcing              = (u=Forcing(pressure_forcing),))
 
 # --- Initial conditions ---
 uᵢ(x, y, z) = U₀ * (1 + 0.05 * randn())
