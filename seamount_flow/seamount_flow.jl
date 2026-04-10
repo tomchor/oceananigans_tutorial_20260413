@@ -28,9 +28,10 @@ seamount(x, y, p) = p.h₀ * exp(-((x - p.x₀) / p.σ)^2) - p.H   # returns z_b
 # --- Grid ---
 Nx, Nz = 128, 32
 
-underlying_grid = RectilinearGrid(size     = (Nx, Nz),
-                                  x        = (0, Lx),
-                                  z        = (-H, 0),
+underlying_grid = RectilinearGrid(size     = (Nx, Ny, Nz),
+                                  x        = (-Lx/2, Lx/2),
+                                  y        = (-Ly/2, Lx/2),
+                                  z        = (0, H),
                                   topology = (Bounded, Flat, Bounded),
                                   halo     = (6, 6))
 
@@ -47,11 +48,11 @@ u_bcs = FieldBoundaryConditions(west = OpenBoundaryCondition(U∞),
                                 east = OpenBoundaryCondition(U∞))
 
 # --- Model ---
-model = NonhydrostaticModel(; grid,
-                              pressure_solver,
-                              boundary_conditions = (u=u_bcs,),
-                              advection           = WENO(order=5),
-                              timestepper         = :RungeKutta3)
+model = NonhydrostaticModel(grid;
+                            pressure_solver,
+                            boundary_conditions = (u=u_bcs,),
+                            advection           = WENO(order=5),
+                            timestepper         = :RungeKutta3)
 
 set!(model, u=U∞)
 
