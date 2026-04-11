@@ -64,8 +64,9 @@ wall_clock = Ref(time_ns())
 function progress(sim)
     u = sim.model.velocities.u
     elapsed = prettytime(1e-9 * (time_ns() - wall_clock[]))
-    @info @sprintf("t = %s, Δt = %s, max|u| = %.3f, wall time = %s",
-                   prettytime(time(sim)), prettytime(sim.Δt), maximum(abs, u), elapsed)
+    percent = 100 * time(sim) / sim.stop_time
+    @info @sprintf("t = %.4f, Δt = %.4f, max|u| = %.3f, elapsed wall time = %s (%.1f%% complete)",
+                   time(sim), sim.Δt, maximum(abs, u), elapsed, percent)
     wall_clock[] = time_ns()
 end
 add_callback!(simulation, progress, IterationInterval(100))
