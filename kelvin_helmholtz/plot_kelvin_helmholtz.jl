@@ -55,3 +55,4 @@ record(fig, animation_filename, 1:length(times); framerate=12) do i
     n[] = i
 end
 @info "Animation saved as $(animation_filename)"
+#---
