@@ -1,5 +1,4 @@
 using Breeze
-using Oceananigans: Oceananigans
 using Oceananigans.Units
 
 using AtmosphericProfilesLibrary
@@ -18,8 +17,6 @@ using Random
 # =============================================================================
 
 Random.seed!(42)
-
-Oceananigans.defaults.FloatType = Float32
 
 # --- Grid ---
 Nx = 128
@@ -112,7 +109,7 @@ vᵢ(x, z) = v₀(z)
 set!(model, θ = θᵢ, qᵗ = qᵢ, u = uᵢ, v = vᵢ)
 
 # --- Simulation ---
-simulation = Simulation(model; Δt = 2, stop_time = 10hour)
+simulation = Simulation(model; Δt = 2, stop_time = 5hour)
 conjure_time_step_wizard!(simulation, cfl = 0.7)
 
 θ   = liquid_ice_potential_temperature(model)
