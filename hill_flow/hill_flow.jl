@@ -1,6 +1,5 @@
 using Oceananigans
 using NCDatasets
-using Printf
 
 # =============================================================================
 # Flow past a Gaussian hill (2D, xz)
@@ -61,11 +60,8 @@ set!(model, u=U∞)
 simulation = Simulation(model; Δt=Δt₀, stop_time=50)
 conjure_time_step_wizard!(simulation, cfl=0.5, IterationInterval(2))
 
-function progress(sim)
-    u = sim.model.velocities.u
-    @info @sprintf("t = %s, Δt = %s, max|u| = %.3f",
-                   prettytime(time(sim)), prettytime(sim.Δt), maximum(abs, u))
-end
+using Oceanostics.ProgressMessengers
+progress(sim) = @info (PercentageProgress() + SimulationTime() + TimeStep() + AdvectiveCFLNumber() + MaxUVelocity() + StepDuration())(sim)
 add_callback!(simulation, progress, IterationInterval(100))
 
 # --- Output ---
