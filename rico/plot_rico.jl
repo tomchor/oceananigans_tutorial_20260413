@@ -1,21 +1,19 @@
 using Oceananigans
 using GLMakie
-using Statistics: mean, quantile
+using Statistics: quantile
 using Printf
 
 # =============================================================================
 # Visualize rico.jl output.
 # Run rico.jl first to produce rico.jld2.
 # Produces:
-#   rico.mp4         – animation of xz cross-sections
-#   rico_profiles.png – time-evolving x-averaged profiles
+#   rico.mp4 – animation of xz cross-sections
 # =============================================================================
 
 plot_filepath = "rico.jld2"
 
 # --- Load timeseries ---
 @info "Loading timeseries..."
-u_ts   = FieldTimeSeries(plot_filepath, "u")
 w_ts   = FieldTimeSeries(plot_filepath, "w")
 θ_ts   = FieldTimeSeries(plot_filepath, "θ")
 qᶜˡ_ts = FieldTimeSeries(plot_filepath, "qᶜˡ")
@@ -68,47 +66,3 @@ record(fig, "rico.mp4", 1:Nt; framerate=12) do i
     n[] = i
 end
 @info "Animation saved as rico.mp4"
-
-# =============================================================================
-# Part 2: time-evolving x-averaged profiles
-# =============================================================================
-@info "Building profiles figure..."
-
-z = Oceananigans.Grids.znodes(θ_ts.grid, Center())
-
-# Select ~8 evenly-spaced snapshots
-step    = max(1, Nt ÷ 8)
-indices = 1:step:Nt
-colors  = cgrad(:viridis, length(indices); categorical=true)
-
-fig2 = Figure(size=(1100, 480))
-Label(fig2[0, :], "RICO: x-averaged profiles", fontsize=18, tellwidth=false)
-
-ax_θ   = Axis(fig2[1, 1]; xlabel="θ (K)",           ylabel="z (m)")
-ax_u   = Axis(fig2[1, 2]; xlabel="u (m s⁻¹)",       ylabel="z (m)")
-ax_qᶜˡ = Axis(fig2[1, 3]; xlabel="qᶜˡ (kg kg⁻¹)",   ylabel="z (m)")
-ax_qʳ  = Axis(fig2[1, 4]; xlabel="qʳ (kg kg⁻¹)",    ylabel="z (m)")
-
-for (ci, ni) in enumerate(indices)
-    label = prettytime(times[ni])
-    c     = colors[ci]
-
-    θ_prof   = dropdims(mean(interior(θ_ts[ni]),   dims=(1, 2)), dims=(1, 2))
-    u_prof   = dropdims(mean(interior(u_ts[ni]),   dims=(1, 2)), dims=(1, 2))
-    qᶜˡ_prof = dropdims(mean(interior(qᶜˡ_ts[ni]), dims=(1, 2)), dims=(1, 2))
-    qʳ_prof  = dropdims(mean(interior(qʳ_ts[ni]),  dims=(1, 2)), dims=(1, 2))
-
-    lines!(ax_θ,   θ_prof,   z; color=c, label=label)
-    lines!(ax_u,   u_prof,   z; color=c)
-    lines!(ax_qᶜˡ, qᶜˡ_prof, z; color=c)
-    lines!(ax_qʳ,  qʳ_prof,  z; color=c)
-end
-
-for ax in (ax_θ, ax_u, ax_qᶜˡ, ax_qʳ)
-    ylims!(ax, 0, 4000)
-end
-
-axislegend(ax_θ, position=:rb, labelsize=11)
-
-save("rico_profiles.png", fig2)
-@info "Profiles saved as rico_profiles.png"

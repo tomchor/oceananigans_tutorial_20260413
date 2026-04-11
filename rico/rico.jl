@@ -115,7 +115,7 @@ vᵢ(x, z) = v₀(z)
 set!(model, θ = θᵢ, qᵗ = qᵢ, u = uᵢ, v = vᵢ)
 
 # --- Simulation ---
-simulation = Simulation(model; Δt = 2, stop_time = 24hour)
+simulation = Simulation(model; Δt = 2, stop_time = 10hour)
 conjure_time_step_wizard!(simulation, cfl = 0.7)
 
 θ   = liquid_ice_potential_temperature(model)
@@ -140,7 +140,7 @@ u, v, w = model.velocities
 
 simulation.output_writers[:fields] = JLD2Writer(model,
     (; u, w, θ, qᶜˡ, qʳ),
-    schedule           = TimeInterval(10minutes),
+    schedule           = TimeInterval(2minutes),
     filename           = "rico.jld2",
     overwrite_existing = true)
 
