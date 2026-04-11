@@ -38,8 +38,8 @@ Label(fig[0, 1:4], title_str, fontsize=18)
 kwargs_xy = (xlabel="x (m)", ylabel="y (m)", aspect=DataAspect())
 kwargs_xz = (xlabel="x (m)", ylabel="z (m)", aspect=DataAspect())
 
-ax_w_xy = Axis(fig[1, 1]; title="w  —  horizontal slice (z ≈ H/2)", kwargs_xy...)
-ax_T_xy = Axis(fig[1, 3]; title="θ  —  horizontal slice (z ≈ H/2)", kwargs_xy...)
+ax_w_xy = Axis(fig[1, 1]; title="w  —  horizontal slice (z ≈ H/4)", kwargs_xy...)
+ax_T_xy = Axis(fig[1, 3]; title="θ  —  horizontal slice (z ≈ H/4)", kwargs_xy...)
 ax_w_xz = Axis(fig[2, 1]; title="w  —  vertical cross-section",     kwargs_xz...)
 ax_T_xz = Axis(fig[2, 3]; title="θ  —  vertical cross-section",     kwargs_xz...)
 

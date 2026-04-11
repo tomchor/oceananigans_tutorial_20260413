@@ -97,7 +97,7 @@ simulation.output_writers[:midlevel] = NetCDFWriter(model,
     (; u, v, w, T),
     schedule           = TimeInterval(2minutes),
     filename           = "free_convection.nc",
-    indices            = (:, :, Nz÷2),     # mid-level (z ≈ H/2) horizontal slice
+    indices            = (:, :, Nz÷4),     # lower-level (z ≈ H/4) horizontal slice
     overwrite_existing = true)
 
 simulation.output_writers[:xz_slice] = NetCDFWriter(model,
