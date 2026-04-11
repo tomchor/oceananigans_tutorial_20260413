@@ -46,18 +46,14 @@ model = NonhydrostaticModel(grid;
                             tracers   = :b)
 
 # --- Initial conditions ---
-shear_flow(x, z)     = U * tanh(z / h)
-stratification(x, z) = B₀ * tanh(z / h)
-perturbation(x, z)   = perturbation_amplitude * abs(randn()) * exp(-z^2) * sin(x * k_max - π) # Nice and centered eye
-
-uᵢ(x, z) = shear_flow(x, z)
-bᵢ(x, z) = stratification(x, z)
-wᵢ(x, z) = perturbation(x, z)
+uᵢ(x, z) = U * tanh(z / h)
+bᵢ(x, z) = B₀ * tanh(z / h)
+wᵢ(x, z) = perturbation_amplitude * abs(randn()) * exp(-z^2) * sin(x * k_max - π) # Nice and centered eye
 set!(model, u=uᵢ, b=bᵢ, w=wᵢ)
 
 # --- Simulation ---
-Δx = minimum_xspacing(grid)
-simulation = Simulation(model; Δt=0.1 * Δx / U, stop_time=200)
+Δt = 0.2 * minimum_xspacing(grid) / maximum(model.velocities.u)
+simulation = Simulation(model; Δt=Δt, stop_time=200)
 conjure_time_step_wizard!(simulation, cfl=0.8, IterationInterval(5))
 
 function progress(sim)

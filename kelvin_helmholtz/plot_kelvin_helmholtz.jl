@@ -1,7 +1,5 @@
-using CairoMakie
-using Printf
 using Oceananigans
-using Statistics: quantile
+import NCDatasets
 
 # =============================================================================
 # Animate kelvin_helmholtz.jl output.
@@ -16,19 +14,22 @@ plot_filepath = "kelvin_helmholtz.nc"
 b_timeseries = FieldTimeSeries(plot_filepath, "b")
 S_timeseries = FieldTimeSeries(plot_filepath, "S")
 
-times = ω_timeseries.times
-S_lim = quantile(vec(interior(S_timeseries, :, 1, :, :)), 0.98)
+using Statistics: quantile
+S_lim = quantile(vec(interior(S_timeseries)), 0.98)
 #---
 
 #+++ Build figure
+using GLMakie
 n = Observable(1)
 
-ωₙ = @lift view(ω_timeseries[$n], :, 1, :)
-bₙ = @lift view(b_timeseries[$n], :, 1, :)
-Sₙ = @lift view(S_timeseries[$n], :, 1, :)
+ωₙ = @lift ω_timeseries[$n]
+bₙ = @lift b_timeseries[$n]
+Sₙ = @lift S_timeseries[$n]
 
 fig = Figure(size=(1200, 500))
 
+using Printf
+times = ω_timeseries.times
 title = @lift @sprintf("Kelvin-Helmholtz Instability\nt = %.1f", times[$n])
 fig[1, 1:6] = Label(fig, title, fontsize=20, tellwidth=false, justification=:center)
 
