@@ -1,7 +1,7 @@
 using Oceananigans
 using Oceananigans.Units
 using NCDatasets
-using Printf
+using Oceanostics.ProgressMessengers
 
 # =============================================================================
 # Atmospheric free convection
@@ -76,12 +76,7 @@ w★  = (g / θ₀ * Qᵀ * H)^(1/3)   # Deardorff velocity scale (m/s)
 simulation = Simulation(model; Δt=Δt₀, stop_time=4hours)
 conjure_time_step_wizard!(simulation, cfl=0.8, IterationInterval(5))
 
-function progress(sim)
-    w = sim.model.velocities.w
-    T = sim.model.tracers.T
-    @info @sprintf("t = %s, Δt = %s, max|w| = %.2f m/s, T_sfc = %.3f K",
-                   prettytime(time(sim)), prettytime(sim.Δt), maximum(abs, w), maximum(interior(T, :, :, 1)))
-end
+progress = TimedMessenger()
 add_callback!(simulation, progress, IterationInterval(100))
 
 # --- Output ---
