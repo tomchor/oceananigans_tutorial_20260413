@@ -1,6 +1,7 @@
 using Oceananigans
 import NCDatasets
 using Statistics: quantile
+using Printf
 using CairoMakie
 
 # =============================================================================
@@ -20,10 +21,10 @@ w_lim = max(quantile(abs.(vec(interior(w_ts, :, 1, :, :))), 0.98), eps())
 u_lim = max(quantile(abs.(vec(interior(u_ts, :, 1, :, :))), 0.98), eps())
 
 # --- Figure layout ---
-fig = Figure(size=(900, 900))
+fig = Figure(size=(900, 500))
 
 n = Observable(1)
-title_str = @lift "t = " * prettytime(times[$n])
+title_str = @lift @sprintf("t = %.1f", times[$n])
 Label(fig[0, 1:2], title_str, fontsize=18)
 
 ax_ω = Axis(fig[1, 1]; title="Vorticity  ω = ∂ᵤu − ∂ₓw", xlabel="x", ylabel="z", aspect=DataAspect())
@@ -38,9 +39,9 @@ hm_ω = heatmap!(ax_ω, ω_plt; colormap=:vik,     colorrange=(-ω_lim, ω_lim))
 hm_w = heatmap!(ax_w, w_plt; colormap=:balance,  colorrange=(-w_lim, w_lim))
 hm_u = heatmap!(ax_u, u_plt; colormap=:thermal,  colorrange=(0, u_lim))
 
-Colorbar(fig[1, 2], hm_ω; label="ω (s⁻¹)",   vertical=true)
-Colorbar(fig[2, 2], hm_w; label="w (m s⁻¹)", vertical=true)
-Colorbar(fig[3, 2], hm_u; label="u (m s⁻¹)", vertical=true)
+Colorbar(fig[1, 2], hm_ω; label="ω", vertical=true, height=Relative(0.3))
+Colorbar(fig[2, 2], hm_w; label="w", vertical=true, height=Relative(0.3))
+Colorbar(fig[3, 2], hm_u; label="u", vertical=true, height=Relative(0.3))
 
 # --- Record animation ---
 record(fig, "hill_flow.mp4", 1:Nt; framerate=20) do nn

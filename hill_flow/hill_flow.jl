@@ -1,5 +1,4 @@
 using Oceananigans
-using Oceananigans.Solvers: ConjugateGradientPoissonSolver
 using NCDatasets
 using Printf
 
@@ -48,6 +47,7 @@ u_bcs = FieldBoundaryConditions(west     = OpenBoundaryCondition(U∞), # Consta
                                 immersed = drag)
 
 # --- Model ---
+using Oceananigans.Solvers: ConjugateGradientPoissonSolver
 model = NonhydrostaticModel(grid;
                             boundary_conditions = (u=u_bcs,),
                             advection           = WENO(order=5),
