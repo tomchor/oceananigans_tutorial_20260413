@@ -25,16 +25,14 @@ h₀ = 0.4H       # peak height above the bottom
 hill(x) = h₀ * exp(-((x - x₀) / σ)^2) - H   # returns z_bottom(x)
 
 # --- Grid ---
-Nx, Nz = 256, 64
+Nx, Nz = 128, 32
 
 underlying_grid = RectilinearGrid(size     = (Nx, Nz),
-                                  x        = (-Lx/2, Lx/2),
+                                  x        = (-Lx/3, 2Lx/3),
                                   z        = (-H, 0),
-                                  topology = (Bounded, Flat, Bounded),
-                                  halo     = (6, 6))
+                                  topology = (Bounded, Flat, Bounded))
 
-# Drag coefficient from law of the wall (https://doi.org/10.1029/2005WR004685)
-const κᵛᵏ = 0.4    # von Kármán constant
+const κᵛᵏ = 0.4 # von Kármán constant
 z₁ = minimum_zspacing(underlying_grid, Center(), Center(), Center()) / 2
 Cd = (κᵛᵏ / log(z₁ / z₀))^2
 @info "z₁ = $z₁,  Cd = $Cd"
@@ -43,10 +41,11 @@ hill_params = (; x₀, h₀, σ, H)
 grid = ImmersedBoundaryGrid(underlying_grid, GridFittedBottom(hill))
 
 # --- Boundary conditions ---
-u_bcs = FieldBoundaryConditions(west   = OpenBoundaryCondition(U∞),
-                                east   = OpenBoundaryCondition(U∞, scheme = PerturbationAdvection()),
-                                bottom = BulkDrag(coefficient=Cd),
-                                immersed = BulkDrag(coefficient=Cd))
+drag = BulkDrag(coefficient=Cd)
+u_bcs = FieldBoundaryConditions(west     = OpenBoundaryCondition(U∞), # Constant inflow
+                                east     = OpenBoundaryCondition(U∞, scheme = PerturbationAdvection()), # Perturbations get advected out
+                                bottom   = drag,
+                                immersed = drag)
 
 # --- Model ---
 model = NonhydrostaticModel(grid;
@@ -59,7 +58,7 @@ set!(model, u=U∞)
 
 # --- Simulation ---
 Δt₀ = 0.1 * minimum_xspacing(grid) / U∞
-simulation = Simulation(model; Δt=Δt₀, stop_time=10)
+simulation = Simulation(model; Δt=Δt₀, stop_time=50)
 conjure_time_step_wizard!(simulation, cfl=0.5, IterationInterval(2))
 
 function progress(sim)
