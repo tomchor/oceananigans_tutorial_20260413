@@ -74,7 +74,7 @@ set!(model, T=θᵢ)
 # --- Simulation ---
 w★  = (g / θ₀ * Qᵀ * H)^(1/3)   # Deardorff velocity scale (m/s)
 Δt₀ = 0.1 * minimum_zspacing(grid) / w★
-simulation = Simulation(model; Δt=Δt₀, stop_time=2hours)
+simulation = Simulation(model; Δt=Δt₀, stop_time=4hours)
 conjure_time_step_wizard!(simulation, cfl=0.8, IterationInterval(5))
 
 wall_clock = Ref(time_ns())
@@ -89,7 +89,7 @@ function progress(sim)
 end
 add_callback!(simulation, progress, IterationInterval(100))
 
-# --- Output: mid-level (z ≈ H/2) horizontal slice ---
+# --- Output ---
 u, v, w = model.velocities
 T = model.tracers.T
 
@@ -97,7 +97,14 @@ simulation.output_writers[:midlevel] = NetCDFWriter(model,
     (; u, v, w, T),
     schedule           = TimeInterval(2minutes),
     filename           = "free_convection.nc",
-    indices            = (:, :, Nz÷2),
+    indices            = (:, :, Nz÷2),     # mid-level (z ≈ H/2) horizontal slice
+    overwrite_existing = true)
+
+simulation.output_writers[:xz_slice] = NetCDFWriter(model,
+    (; u, v, w, T),
+    schedule           = TimeInterval(2minutes),
+    filename           = "free_convection_xz.nc",
+    indices            = (:, Ny÷2, :),     # xz slice at mid-domain y
     overwrite_existing = true)
 
 run!(simulation)
