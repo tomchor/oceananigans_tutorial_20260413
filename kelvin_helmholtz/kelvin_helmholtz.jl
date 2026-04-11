@@ -1,7 +1,5 @@
 using Oceananigans
-using NCDatasets
-using Printf
-using Oceanostics.FlowDiagnostics: StrainRateTensorModulus
+import NCDatasets
 
 # =============================================================================
 # Kelvin-Helmholtz instability (2D, xz plane) — implicit LES
@@ -32,6 +30,7 @@ Lz = 15 * h
 Nz = 256
 Nx = round(Int, Nz * (Lx / Lz) / 2)   # cell aspect ratio Δx/Δz ≈ 2
 
+using Printf
 @info @sprintf("Most unstable KH wavenumber: k_max = %.4f  (λ_max = %.2f, Lx = %.1f)", k_max, λ_max, Lx)
 
 grid = RectilinearGrid(size     = (Nx, Nz),
@@ -48,7 +47,7 @@ model = NonhydrostaticModel(grid;
 # --- Initial conditions ---
 shear_flow(x, z)     = U * tanh(z / h)
 stratification(x, z) = B₀ * tanh(z / h)
-perturbation(x, z)   = perturbation_amplitude * abs(randn()) * exp(-z^2) * sin(x * k_max - π)
+perturbation(x, z)   = perturbation_amplitude * abs(randn()) * exp(-z^2) * sin(x * k_max - π) # Nice and centered eye
 
 uᵢ(x, z) = shear_flow(x, z)
 bᵢ(x, z) = stratification(x, z)
@@ -57,17 +56,13 @@ set!(model, u=uᵢ, b=bᵢ, w=wᵢ)
 
 # --- Simulation ---
 Δx = minimum_xspacing(grid)
-simulation = Simulation(model; Δt=0.1 * Δx / U, stop_time=200.0)
+simulation = Simulation(model; Δt=0.1 * Δx / U, stop_time=200)
 conjure_time_step_wizard!(simulation, cfl=0.8, IterationInterval(5))
 
-wall_clock = Ref(time_ns())
 function progress(sim)
-    u = sim.model.velocities.u
-    elapsed = prettytime(1e-9 * (time_ns() - wall_clock[]))
+    w = sim.model.velocities.w
     percent = 100 * time(sim) / sim.stop_time
-    @info @sprintf("t = %.4f, Δt = %.4f, max|u| = %.3f, elapsed wall time = %s (%.1f%% complete)",
-                   time(sim), sim.Δt, maximum(abs, u), elapsed, percent)
-    wall_clock[] = time_ns()
+    @info @sprintf("t = %.4f, Δt = %.4f, max|w| = %.3f (%.1f%% complete)", time(sim), sim.Δt, maximum(abs, w), percent)
 end
 add_callback!(simulation, progress, IterationInterval(100))
 
@@ -75,12 +70,14 @@ add_callback!(simulation, progress, IterationInterval(100))
 u, v, w = model.velocities
 b = model.tracers.b
 ω = Field(∂z(u) - ∂x(w))   # vorticity in the xz plane
+
+using Oceanostics.FlowDiagnostics: StrainRateTensorModulus
 S = StrainRateTensorModulus(model)
 
 simulation.output_writers[:fields] = NetCDFWriter(model,
-    (; u, w, b, ω, S),
-    schedule           = TimeInterval(2.0),
-    filename           = "kelvin_helmholtz.nc",
-    overwrite_existing = true)
+                                                  (; u, w, b, ω, S),
+                                                  schedule           = TimeInterval(2.0),
+                                                  filename           = "kelvin_helmholtz.nc",
+                                                  overwrite_existing = true)
 
 run!(simulation)

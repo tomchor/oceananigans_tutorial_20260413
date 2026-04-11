@@ -17,15 +17,15 @@ b_timeseries = FieldTimeSeries(plot_filepath, "b")
 S_timeseries = FieldTimeSeries(plot_filepath, "S")
 
 times = ω_timeseries.times
-S_lim = quantile(vec(interior(S_timeseries, :, 1, :, :)), 0.98)
+S_lim = quantile(vec(interior(S_timeseries)), 0.98)
 #---
 
 #+++ Build figure
-n = Observable(1)
+n = Observable(1) # Varying time index
 
-ωₙ = @lift view(ω_timeseries[$n], :, 1, :)
-bₙ = @lift view(b_timeseries[$n], :, 1, :)
-Sₙ = @lift view(S_timeseries[$n], :, 1, :)
+ωₙ = @lift ω_timeseries[$n]
+bₙ = @lift b_timeseries[$n]
+Sₙ = @lift S_timeseries[$n]
 
 fig = Figure(size=(1200, 500))
 
@@ -34,8 +34,8 @@ fig[1, 1:6] = Label(fig, title, fontsize=20, tellwidth=false, justification=:cen
 
 kwargs = (xlabel="x", ylabel="z", aspect=1)
 
-ax_ω = Axis(fig[2, 1]; title="Vorticity",      kwargs...)
-ax_b = Axis(fig[2, 3]; title="Buoyancy",        kwargs...)
+ax_ω = Axis(fig[2, 1]; title="Vorticity", kwargs...)
+ax_b = Axis(fig[2, 3]; title="Buoyancy", kwargs...)
 ax_S = Axis(fig[2, 5]; title="Strain rate (S)", kwargs...)
 
 hm_ω = heatmap!(ax_ω, ωₙ; colormap=:balance, colorrange=(-1, 1))
@@ -55,3 +55,4 @@ record(fig, animation_filename, 1:length(times); framerate=12) do i
     n[] = i
 end
 @info "Animation saved as $(animation_filename)"
+#---
