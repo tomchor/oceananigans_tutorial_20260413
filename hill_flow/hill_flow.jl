@@ -28,12 +28,12 @@ h₀ = 0.6H       # peak height above the bottom
 hill(x, y, p) = p.h₀ * exp(-((x - p.x₀)^2 + y^2) / p.σ^2) - p.H   # returns z_bottom(x, y)
 
 # --- Grid ---
-Nx, Ny, Nz = 128, 128, 32
+Nx, Ny, Nz = 64, 64, 32
 
 underlying_grid = RectilinearGrid(size     = (Nx, Ny, Nz),
                                   x        = (-Lx/2, Lx/2),
                                   y        = (-Ly/2, Ly/2),
-                                  z        = (-H, 0),
+                                  z        = (0, H),
                                   topology = (Bounded, Periodic, Bounded),
                                   halo     = (6, 6, 6))
 
