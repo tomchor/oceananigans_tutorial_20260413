@@ -25,7 +25,7 @@ Each directory contains a simulation script (e.g. `hill_flow.jl`) and a matching
 
 ## Prerequisites
 
-- [Julia](https://julialang.org/downloads/) (1.10 or later recommended)
+- [Julia](https://julialang.org/downloads/) (1.12 or later recommended)
 - All dependencies are listed in `Project.toml`. Install them in one step:
 
 ```julia
