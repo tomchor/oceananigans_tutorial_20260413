@@ -12,8 +12,6 @@ using Random
 # Rain in Cumulus over the Ocean intercomparison case (vanZanten et al. 2011).
 # Trade-wind shallow cumulus with warm-rain microphysics, large-scale subsidence,
 # prescribed radiative cooling and moisture tendencies, and bulk surface fluxes.
-#
-# Run for at least 24 h to develop a quasi-steady precipitating state.
 # =============================================================================
 
 Random.seed!(42)
