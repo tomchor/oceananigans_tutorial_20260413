@@ -3,13 +3,13 @@ using CairoMakie
 using Statistics: quantile
 
 # =============================================================================
-# Animate channel_flow_les.jl output.
-# Run channel_flow_les.jl first to produce the .nc files.
+# Animate atmosphere_les.jl output.
+# Run atmosphere_les.jl first to produce the .nc files.
 # =============================================================================
 
 # --- Surface fields ---
-ζ_ts = FieldTimeSeries("channel_flow_surface.nc", "ζ")
-c_ts = FieldTimeSeries("channel_flow_surface.nc", "c")
+ζ_ts = FieldTimeSeries("atmosphere_surface.nc", "ζ")
+c_ts = FieldTimeSeries("atmosphere_surface.nc", "c")
 
 times = ζ_ts.times
 Nt    = length(times)
@@ -17,8 +17,8 @@ Nt    = length(times)
 ζ_lim = quantile(abs.(vec(interior(ζ_ts, :, :, 1, :))), 0.98)
 
 # --- xz slice ---
-w_ts    = FieldTimeSeries("channel_flow_xz.nc", "w")
-c_xz_ts = FieldTimeSeries("channel_flow_xz.nc", "c")
+w_ts    = FieldTimeSeries("atmosphere_xz.nc", "w")
+c_xz_ts = FieldTimeSeries("atmosphere_xz.nc", "c")
 
 w_lim = quantile(abs.(vec(interior(w_ts, :, 1, :, :))), 0.98)
 
@@ -56,8 +56,8 @@ Colorbar(fig[2, 2], hm_ζ; label="ζ (s⁻¹)", vertical=true)
 Colorbar(fig[2, 4], hm_c;  label="c", vertical=true)
 
 # --- Record animation ---
-record(fig, "channel_flow_les.mp4", 1:Nt; framerate=20) do nn
+record(fig, "atmosphere_les.mp4", 1:Nt; framerate=20) do nn
     n[] = nn
 end
 
-@info "Animation saved to channel_flow_les.mp4"
+@info "Animation saved to atmosphere_les.mp4"

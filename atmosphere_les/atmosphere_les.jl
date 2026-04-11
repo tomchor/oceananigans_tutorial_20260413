@@ -3,11 +3,11 @@ using NCDatasets
 using Printf
 
 # =============================================================================
-# Forced channel flow with quadratic bottom drag
+# Atmosphere LES with quadratic surface drag
 #
-# A doubly-periodic LES channel driven by a constant pressure-gradient body
-# force and damped by a quadratic bottom drag.  A passive tracer blob is
-# released at the surface so you can watch it get stirred by the turbulence.
+# A doubly-periodic LES driven by a constant pressure-gradient body
+# force and damped by a quadratic surface drag.  A passive tracer blob is
+# released near the surface so you can watch it get stirred by the turbulence.
 #
 # Increase Nx/Ny/Nz for better-resolved turbulence.
 # =============================================================================
@@ -17,7 +17,7 @@ Lx = 2π
 Ly = π
 H  = 1
 U₀ = 1
-z₀ = 1e-4           # roughness length (m)
+z₀ = 1e-4 # roughness length (m)
 
 # --- Grid ---
 Nx, Ny, Nz = 64, 32, 32
@@ -79,15 +79,15 @@ u, v, w = model.velocities
 simulation.output_writers[:surface] = NetCDFWriter(model,
     merge(model.velocities, model.tracers, (; ζ)),
     schedule            = TimeInterval(1.0),
-    filename            = "channel_flow_surface.nc",
-    indices             = (:, :, Nz),       # surface (xy) slice
+    filename            = "atmosphere_surface.nc",
+    indices             = (:, :, 2), # Close to surface (xy) slice
     overwrite_existing  = true)
 
 simulation.output_writers[:xz_slice] = NetCDFWriter(model,
     merge(model.velocities, model.tracers),
     schedule            = TimeInterval(1.0),
-    filename            = "channel_flow_xz.nc",
-    indices             = (:, Ny÷2, :),     # xz slice at mid-domain y
+    filename            = "atmosphere_xz.nc",
+    indices             = (:, Ny÷2, :), # xz slice at mid-domain y
     overwrite_existing  = true)
 
 run!(simulation)
