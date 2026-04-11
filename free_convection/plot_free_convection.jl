@@ -15,8 +15,6 @@ T_xy = FieldTimeSeries("free_convection.nc",    "T")
 w_xz = FieldTimeSeries("free_convection_xz.nc", "w")
 T_xz = FieldTimeSeries("free_convection_xz.nc", "T")
 
-x, y, _ = nodes(w_xy)
-x2, _, z = nodes(w_xz)
 times = w_xy.times
 Nt    = length(times)
 
@@ -35,23 +33,23 @@ n = Observable(1)
 title_str = @lift "t = " * prettytime(times[$n])
 Label(fig[0, 1:4], title_str, fontsize=18)
 
-kwargs_xy = (xlabel="x (m)", ylabel="y (m)", aspect=DataAspect())
-kwargs_xz = (xlabel="x (m)", ylabel="z (m)", aspect=DataAspect())
+kwargs_xy = (xlabel="x (m)", ylabel="y (m)", aspect=1)
+kwargs_xz = (xlabel="x (m)", ylabel="z (m)", aspect=1)
 
 ax_w_xy = Axis(fig[1, 1]; title="w  —  horizontal slice (z ≈ H/4)", kwargs_xy...)
 ax_T_xy = Axis(fig[1, 3]; title="θ  —  horizontal slice (z ≈ H/4)", kwargs_xy...)
 ax_w_xz = Axis(fig[2, 1]; title="w  —  vertical cross-section",     kwargs_xz...)
 ax_T_xz = Axis(fig[2, 3]; title="θ  —  vertical cross-section",     kwargs_xz...)
 
-w_xy_plt = @lift interior(w_xy[$n], :, :, 1)
-T_xy_plt = @lift interior(T_xy[$n], :, :, 1)
-w_xz_plt = @lift interior(w_xz[$n], :, 1, :)
-T_xz_plt = @lift interior(T_xz[$n], :, 1, :)
+w_xy_plt = @lift w_xy[$n]
+T_xy_plt = @lift T_xy[$n]
+w_xz_plt = @lift w_xz[$n]
+T_xz_plt = @lift T_xz[$n]
 
-hm_w_xy = heatmap!(ax_w_xy, x,  y, w_xy_plt; colormap=:vik,     colorrange=(-w_lim, w_lim))
-hm_T_xy = heatmap!(ax_T_xy, x,  y, T_xy_plt; colormap=:thermal,  colorrange=(T_min, T_max))
-hm_w_xz = heatmap!(ax_w_xz, x2, z, w_xz_plt; colormap=:vik,     colorrange=(-w_lim, w_lim))
-hm_T_xz = heatmap!(ax_T_xz, x2, z, T_xz_plt; colormap=:thermal,  colorrange=(T_min, T_max))
+hm_w_xy = heatmap!(ax_w_xy, w_xy_plt; colormap=:vik,    colorrange=(-w_lim, w_lim))
+hm_T_xy = heatmap!(ax_T_xy, T_xy_plt; colormap=:thermal)
+hm_w_xz = heatmap!(ax_w_xz, w_xz_plt; colormap=:vik,    colorrange=(-w_lim, w_lim))
+hm_T_xz = heatmap!(ax_T_xz, T_xz_plt; colormap=:thermal, colorrange=(T_min, T_max))
 
 Colorbar(fig[1, 2], hm_w_xy; label="w (m/s)", vertical=true)
 Colorbar(fig[1, 4], hm_T_xy; label="θ (K)",   vertical=true)
