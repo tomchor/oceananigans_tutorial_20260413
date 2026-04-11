@@ -14,8 +14,6 @@ using Printf
 # --- Physical parameters ---
 Ri  = 0.1     # Richardson number (must be < 0.25 for instability)
 h   = 0.25    # buoyancy layer thickness
-Re₀ = 5e-4   # base Reynolds number (ν = 1 / (Re₀ · Nz²))
-Pr  = 1.0     # Prandtl number (κ = ν / Pr)
 perturbation_amplitude = 0.01
 
 # --- Grid ---
@@ -28,15 +26,9 @@ grid = RectilinearGrid(size     = (Nx, Nz),
                        z        = (-Lz/2, Lz/2),
                        topology = (Periodic, Flat, Bounded))
 
-# --- Viscosity and diffusivity (resolution-dependent, 2D scaling) ---
-Re = Re₀ * Nz^2
-ν  = 1 / Re
-κ  = ν / Pr
-
-# --- Model ---
+# --- Model (implicit LES: WENO dissipation replaces explicit viscosity) ---
 model = NonhydrostaticModel(grid;
-                            advection = Centered(order=4),
-                            closure   = ScalarDiffusivity(ν=ν, κ=κ),
+                            advection = WENO(order=5),
                             buoyancy  = BuoyancyTracer(),
                             tracers   = :b)
 
@@ -47,9 +39,9 @@ k_max = 0.4446 * sqrt(max(0.0, 1 - 4*Ri))
 @info @sprintf("Most unstable KH wavenumber: k_max = %.4f  (λ_max = %.2f, Lx = %.1f)",
                k_max, λ_max, Lx)
 
-uᵢ(x, y, z) = tanh(z) + perturbation_amplitude * sin(2π/Lx * x) * exp(-z^2 / 2)
-bᵢ(x, y, z) = h * Ri * tanh(z / h)
-wᵢ(x, y, z) = perturbation_amplitude * cos(2π/Lx * x) * exp(-z^2 / 2)
+uᵢ(x, z) = tanh(z) + perturbation_amplitude * sin(2π/Lx * x) * exp(-z^2 / 2)
+bᵢ(x, z) = h * Ri * tanh(z / h)
+wᵢ(x, z) = perturbation_amplitude * cos(2π/Lx * x) * exp(-z^2 / 2)
 set!(model, u=uᵢ, b=bᵢ, w=wᵢ)
 
 # --- Simulation ---
