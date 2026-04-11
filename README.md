@@ -15,7 +15,7 @@ This repo contains the tutorial scripts used in the afternoon hands-on session. 
 
 | Directory | Description |
 |---|---|
-| `atmosphere_les/` | Doubly-periodic 3D atmosphere LES driven by a pressure-gradient body force and quadratic surface drag, with a passive tracer |
+| `dry_atmosphere_les/` | Doubly-periodic 3D atmosphere LES driven by a pressure-gradient body force and quadratic surface drag, with a passive tracer |
 | `hill_flow/` | 2D nonhydrostatic flow past a Gaussian hill using the immersed boundary method |
 | `kelvin_helmholtz/` | 2D Kelvin-Helmholtz instability in a stratified shear layer; implicit LES via WENO dissipation |
 | `free_convection/` | 3D atmospheric free convection heated from below with dynamic Smagorinsky SGS closure |

@@ -81,14 +81,14 @@ u, v, w = model.velocities
 simulation.output_writers[:surface] = NetCDFWriter(model,
     merge(model.velocities, model.tracers, (; ζ)),
     schedule            = TimeInterval(10minutes),
-    filename            = "atmosphere_surface.nc",
+    filename            = "dry_atmosphere_surface.nc",
     indices             = (:, :, 2),        # near-surface (xy) slice
     overwrite_existing  = true)
 
 simulation.output_writers[:xz_slice] = NetCDFWriter(model,
     merge(model.velocities, model.tracers),
     schedule            = TimeInterval(10minutes),
-    filename            = "atmosphere_xz.nc",
+    filename            = "dry_atmosphere_xz.nc",
     indices             = (:, Ny÷2, :),     # xz slice at mid-domain y
     overwrite_existing  = true)
 
