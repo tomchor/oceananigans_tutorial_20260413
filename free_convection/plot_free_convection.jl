@@ -1,4 +1,4 @@
-using CairoMakie
+using GLMakie
 using Printf
 using Oceananigans
 using Statistics: quantile
