@@ -39,15 +39,12 @@ reference_state = ReferenceState(grid, constants;
 dynamics = AnelasticDynamics(reference_state)
 
 # --- Bulk surface fluxes (vanZanten et al. 2011, eqs. 1–4) ---
-Cᴰ = 1.229e-3   # drag coefficient
 Cᵀ = 1.094e-3   # sensible heat transfer coefficient
 Cᵛ = 1.133e-3   # moisture transfer coefficient
 T₀ = 299.8      # sea-surface temperature (K)
 
 ρe_bcs  = FieldBoundaryConditions(bottom = BulkSensibleHeatFlux(coefficient = Cᵀ, surface_temperature = T₀))
 ρqᵉ_bcs = FieldBoundaryConditions(bottom = BulkVaporFlux(coefficient = Cᵛ, surface_temperature = T₀))
-ρu_bcs  = FieldBoundaryConditions(bottom = BulkDrag(coefficient = Cᴰ))
-ρv_bcs  = FieldBoundaryConditions(bottom = BulkDrag(coefficient = Cᴰ))
 
 # --- Sponge layer (damps w in upper 500 m) ---
 # GaussianMask only has a 3-arg method (x,y,z) so we use a plain 2-arg function for 2D
@@ -84,7 +81,7 @@ forcing = (ρu  = (subsidence, geostrophic.ρu),
            ρqᵉ = (subsidence, ∂t_ρqᵉ_forcing),
            ρθ  = (subsidence, ρθ_forcing))
 
-boundary_conditions = (ρe = ρe_bcs, ρqᵉ = ρqᵉ_bcs, ρu = ρu_bcs, ρv = ρv_bcs)
+boundary_conditions = (ρe = ρe_bcs, ρqᵉ = ρqᵉ_bcs)
 
 # --- One-moment cloud microphysics (autoconversion + accretion) ---
 BreezeCloudMicrophysicsExt = Base.get_extension(Breeze, :BreezeCloudMicrophysicsExt)

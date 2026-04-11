@@ -23,9 +23,9 @@ times = θ_ts.times
 Nt    = length(times)
 
 # --- Colormap limits ---
-w_lim   = max(quantile(abs.(vec(interior(w_ts))),  0.998), eps())
-qᶜˡ_lim = max(quantile(vec(interior(qᶜˡ_ts)),     0.99),  eps())
-qʳ_lim  = max(quantile(vec(interior(qʳ_ts)),      0.99),  eps())
+w_lim   = quantile(abs.(vec(interior(w_ts))), 0.998)
+qᶜˡ_lim = quantile(vec(interior(qᶜˡ_ts)), 0.999)
+qʳ_lim  = quantile(vec(interior(qʳ_ts)), 0.99)
 θ_min, θ_max = extrema(interior(θ_ts))
 
 # =============================================================================
@@ -53,8 +53,8 @@ ax_qʳ  = Axis(fig[2, 3]; title="Rain  qʳ",              kw...)
 
 hm_w   = heatmap!(ax_w,   w_n;   colormap=:balance, colorrange=(-w_lim, w_lim))
 hm_θ   = heatmap!(ax_θ,   θ_n;   colormap=:thermal, colorrange=(θ_min, θ_max))
-hm_qᶜˡ = heatmap!(ax_qᶜˡ, qᶜˡ_n; colormap=:dense,  colorrange=(0, qᶜˡ_lim))
-hm_qʳ  = heatmap!(ax_qʳ,  qʳ_n;  colormap=:amp,    colorrange=(0, qʳ_lim))
+hm_qᶜˡ = heatmap!(ax_qᶜˡ, qᶜˡ_n; colormap=:dense, colorrange=(0, qᶜˡ_lim))
+hm_qʳ  = heatmap!(ax_qʳ,  qʳ_n;  colormap=:amp, colorrange=(0, qʳ_lim))
 
 Colorbar(fig[1, 2], hm_w;   label="w (m s⁻¹)")
 Colorbar(fig[1, 4], hm_θ;   label="θ (K)")
