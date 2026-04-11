@@ -17,10 +17,7 @@ Lx = 2π
 Ly = π
 H  = 1
 U₀ = 1
-Cd = 1e-2 # quadratic drag coefficient
-
-# Equilibrium forcing: balances drag at mean flow U₀  (F₀ = Cd U₀² / H)
-F₀ = Cd * U₀^2 / H
+z₀ = 1e-4           # roughness length (m)
 
 # --- Grid ---
 Nx, Ny, Nz = 64, 32, 32
@@ -31,7 +28,15 @@ grid = RectilinearGrid(size  = (Nx, Ny, Nz),
                        z     = (0, H),
                        topology = (Periodic, Periodic, Bounded))
 
-# --- Quadratic bottom drag (applied as a bottom flux) ---
+# Drag coefficient from law of the wall (https://doi.org/10.1029/2005WR004685)
+const κᵛᵏ = 0.4    # von Kármán constant
+z₁ = minimum_zspacing(grid, Center(), Center(), Center()) / 2
+Cd = (κᵛᵏ / log(z₁ / z₀))^2
+@info "z₁ = $z₁,  Cd = $Cd"
+
+F₀ = Cd * U₀^2 / H
+
+# --- Quadratic bottom drag ---
 drag = BulkDrag(coefficient=Cd)
 u_bcs = FieldBoundaryConditions(bottom = drag)
 v_bcs = FieldBoundaryConditions(bottom = drag)

@@ -11,7 +11,6 @@ using Statistics: quantile
 ζ_ts = FieldTimeSeries("channel_flow_surface.nc", "ζ")
 c_ts = FieldTimeSeries("channel_flow_surface.nc", "c")
 
-x_xy, y_xy, _ = nodes(ζ_ts)
 times = ζ_ts.times
 Nt    = length(times)
 
@@ -20,8 +19,6 @@ Nt    = length(times)
 # --- xz slice ---
 w_ts    = FieldTimeSeries("channel_flow_xz.nc", "w")
 c_xz_ts = FieldTimeSeries("channel_flow_xz.nc", "c")
-
-x_xz, _, z_xz = nodes(w_ts)
 
 w_lim = quantile(abs.(vec(interior(w_ts, :, 1, :, :))), 0.98)
 
@@ -43,7 +40,7 @@ hm_w   = heatmap!(ax_w,   w_plt;    colormap=:balance, colorrange=(-w_lim, w_lim
 hm_cxz = heatmap!(ax_cxz, c_xz_plt; colormap=:thermal, colorrange=(0, 1))
 
 Colorbar(fig[1, 2], hm_w;   label="w (m s⁻¹)", vertical=true)
-Colorbar(fig[1, 4], hm_cxz; label="c",          vertical=true)
+Colorbar(fig[1, 4], hm_cxz; label="c", vertical=true)
 
 # Row 2: surface (xy) fields
 ax_ζ = Axis(fig[2, 1]; title="Surface vorticity  ζ = ∂ₓv − ∂ᵧu", xlabel="x", ylabel="y", aspect=DataAspect())
@@ -56,7 +53,7 @@ hm_ζ = heatmap!(ax_ζ, ζ_plt; colormap=:vik,    colorrange=(-ζ_lim, ζ_lim))
 hm_c  = heatmap!(ax_c, c_plt; colormap=:thermal, colorrange=(0, 1))
 
 Colorbar(fig[2, 2], hm_ζ; label="ζ (s⁻¹)", vertical=true)
-Colorbar(fig[2, 4], hm_c;  label="c",        vertical=true)
+Colorbar(fig[2, 4], hm_c;  label="c", vertical=true)
 
 # --- Record animation ---
 record(fig, "channel_flow_les.mp4", 1:Nt; framerate=20) do nn
