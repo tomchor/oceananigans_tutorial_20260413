@@ -15,7 +15,7 @@ This repo contains the tutorial scripts used in the afternoon hands-on session. 
 
 | Directory | Description |
 |---|---|
-| `channel_flow_les/` | Doubly-periodic LES channel flow driven by a pressure-gradient body force and damped by quadratic bottom drag, with a passive tracer |
+| `atmosphere_les/` | Doubly-periodic atmosphere LES driven by a pressure-gradient body force and damped by quadratic surface drag, with a passive tracer |
 | `hill_flow/` | 3-D nonhydrostatic flow past a Gaussian hill using the immersed boundary method |
 
 ## Prerequisites
@@ -37,7 +37,7 @@ Pkg.add(["Oceananigans", "NCDatasets", "CairoMakie"])
 Each script can be run from the Julia REPL (recommended for interactive exploration) or from the terminal:
 
 ```bash
-julia channel_flow_les/channel_flow_les.jl
+julia atmosphere_les/atmosphere_les.jl
 julia hill_flow/hill_flow.jl
 ```
 
