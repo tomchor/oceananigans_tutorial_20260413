@@ -4,13 +4,13 @@ using Statistics: quantile
 using Printf
 
 # =============================================================================
-# Visualize rico.jl output.
-# Run rico.jl first to produce rico.jld2.
+# Visualize rain_over_ocean.jl output.
+# Run rain_over_ocean.jl first to produce rain_over_ocean.jld2.
 # Produces:
-#   rico.mp4 – animation of xz cross-sections
+#   rain_over_ocean.mp4 – animation of xz cross-sections
 # =============================================================================
 
-plot_filepath = "rico.jld2"
+plot_filepath = "rain_over_ocean.jld2"
 
 # --- Load timeseries ---
 @info "Loading timeseries..."
@@ -61,8 +61,8 @@ Colorbar(fig[1, 4], hm_θ;   label="θ (K)")
 Colorbar(fig[2, 2], hm_qᶜˡ; label="qᶜˡ (kg kg⁻¹)")
 Colorbar(fig[2, 4], hm_qʳ;  label="qʳ (kg kg⁻¹)")
 
-record(fig, "rico.mp4", 1:Nt; framerate=12) do i
+record(fig, "rain_over_ocean.mp4", 1:Nt; framerate=12) do i
     @info @sprintf("Animating frame %d / %d  (t = %s)", i, Nt, prettytime(times[i]))
     n[] = i
 end
-@info "Animation saved as rico.mp4"
+@info "Animation saved as rain_over_ocean.mp4"

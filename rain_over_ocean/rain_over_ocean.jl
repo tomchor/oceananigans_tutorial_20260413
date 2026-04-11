@@ -12,8 +12,6 @@ using Random
 # Rain in Cumulus over the Ocean intercomparison case (vanZanten et al. 2011).
 # Trade-wind shallow cumulus with warm-rain microphysics, large-scale subsidence,
 # prescribed radiative cooling and moisture tendencies, and bulk surface fluxes.
-#
-# Run for at least 24 h to develop a quasi-steady precipitating state.
 # =============================================================================
 
 Random.seed!(42)
@@ -135,7 +133,7 @@ u, v, w = model.velocities
 simulation.output_writers[:fields] = JLD2Writer(model,
     (; u, w, θ, qᶜˡ, qʳ),
     schedule           = TimeInterval(2minutes),
-    filename           = "rico.jld2",
+    filename           = "rain_over_ocean.jld2",
     overwrite_existing = true)
 
 run!(simulation)
