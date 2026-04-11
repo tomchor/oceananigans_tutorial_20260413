@@ -135,7 +135,7 @@ u, v, w = model.velocities
 simulation.output_writers[:fields] = JLD2Writer(model,
     (; u, w, θ, qᶜˡ, qʳ),
     schedule           = TimeInterval(2minutes),
-    filename           = "rico.jld2",
+    filename           = "rain_over_ocean.jld2",
     overwrite_existing = true)
 
 run!(simulation)

@@ -19,7 +19,7 @@ This repo contains the tutorial scripts used in the afternoon hands-on session. 
 | `hill_flow/` | 2D nonhydrostatic flow past a Gaussian hill using the immersed boundary method |
 | `kelvin_helmholtz/` | 2D Kelvin-Helmholtz instability in a stratified shear layer; implicit LES via WENO dissipation |
 | `free_convection/` | 3D atmospheric free convection heated from below with dynamic Smagorinsky SGS closure |
-| `rico/` | 2D precipitating shallow cumulus convection (RICO case) using Breeze's anelastic model with one-moment cloud microphysics |
+| `rain_over_ocean/` | 2D precipitating shallow cumulus convection (RICO case) using Breeze's anelastic model with one-moment cloud microphysics |
 
 Each directory contains a simulation script (e.g. `hill_flow.jl`) and a matching plot script (e.g. `plot_hill_flow.jl`). Run the simulation first to produce the output file, then run the plot script to generate the animation.
 
