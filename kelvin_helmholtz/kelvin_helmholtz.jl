@@ -3,23 +3,35 @@ using NCDatasets
 using Printf
 
 # =============================================================================
-# Kelvin-Helmholtz instability (2D, xz plane)
+# Kelvin-Helmholtz instability (2D, xz plane) — implicit LES
 #
-# A shear flow u = tanh(z) with stable stratification b = h·Ri·tanh(z/h).
-# A small perturbation at the most unstable wavenumber triggers the instability.
+# A shear flow u = U·tanh(z/h) with stable stratification b = B₀·tanh(z/h).
+# WENO(order=5) dissipation replaces explicit viscosity (implicit LES).
 #
 # Increase Nz for better-resolved billows.
 # =============================================================================
 
 # --- Physical parameters ---
-Ri  = 0.1     # Richardson number (must be < 0.25 for instability)
-h   = 0.25    # buoyancy layer thickness
-perturbation_amplitude = 0.01
+U                      = 1.0    # velocity profile amplitude (m/s)
+Ri                     = 0.1    # Richardson number (must be < 0.25 for instability)
+h                      = 1.0    # shear/buoyancy layer half-width (m)
+perturbation_amplitude = 0.05   # perturbation amplitude
+
+B₀ = U^2 * Ri / h   # buoyancy amplitude
+
+# --- Most unstable KH wavenumber (Michalke 1964) ---
+k_max = 0.4446 / h
+λ_max = 2π / k_max
+
+# --- Domain ---
+Lx = λ_max
+Lz = 25 * h
 
 # --- Grid ---
-Lx, Lz = 10.0, 14.0
 Nz = 256
-Nx = round(Int, Nz * Lx / Lz / 2)   # cell aspect ratio Δx/Δz ≈ 2
+Nx = round(Int, Nz * (Lx / Lz) / 2)   # cell aspect ratio Δx/Δz ≈ 2
+
+@info @sprintf("Most unstable KH wavenumber: k_max = %.4f  (λ_max = %.2f, Lx = %.1f)", k_max, λ_max, Lx)
 
 grid = RectilinearGrid(size     = (Nx, Nz),
                        x        = (-Lx/2, Lx/2),
@@ -33,19 +45,18 @@ model = NonhydrostaticModel(grid;
                             tracers   = :b)
 
 # --- Initial conditions ---
-# Most unstable KH wavenumber (Michalke 1964; Hazel 1972 stratification correction)
-k_max = 0.4446 * sqrt(max(0.0, 1 - 4*Ri))
-λ_max = 2π / k_max
-@info @sprintf("Most unstable KH wavenumber: k_max = %.4f  (λ_max = %.2f, Lx = %.1f)",
-               k_max, λ_max, Lx)
+shear_flow(x, z)     = U * tanh(z / h)
+stratification(x, z) = B₀ * tanh(z / h)
+perturbation(x, z)   = perturbation_amplitude * abs(randn()) * exp(-z^2) * sin(x * k_max - π)
 
-uᵢ(x, z) = tanh(z) + perturbation_amplitude * sin(2π/Lx * x) * exp(-z^2 / 2)
-bᵢ(x, z) = h * Ri * tanh(z / h)
-wᵢ(x, z) = perturbation_amplitude * cos(2π/Lx * x) * exp(-z^2 / 2)
+uᵢ(x, z) = shear_flow(x, z)
+bᵢ(x, z) = stratification(x, z)
+wᵢ(x, z) = perturbation(x, z)
 set!(model, u=uᵢ, b=bᵢ, w=wᵢ)
 
 # --- Simulation ---
-simulation = Simulation(model; Δt=0.01, stop_time=200.0)
+Δx = minimum_xspacing(grid)
+simulation = Simulation(model; Δt=0.1 * Δx / U, stop_time=200.0)
 conjure_time_step_wizard!(simulation, cfl=0.8, IterationInterval(5))
 
 wall_clock = Ref(time_ns())
