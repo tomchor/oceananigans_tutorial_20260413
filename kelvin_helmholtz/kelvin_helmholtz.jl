@@ -1,6 +1,7 @@
 using Oceananigans
 using NCDatasets
 using Printf
+using Oceanostics.FlowDiagnostics: StrainRateTensorModulus
 
 # =============================================================================
 # Kelvin-Helmholtz instability (2D, xz plane) — implicit LES
@@ -25,7 +26,7 @@ k_max = 0.4446 / h
 
 # --- Domain ---
 Lx = λ_max
-Lz = 25 * h
+Lz = 15 * h
 
 # --- Grid ---
 Nz = 256
@@ -73,9 +74,10 @@ add_callback!(simulation, progress, IterationInterval(100))
 u, v, w = model.velocities
 b = model.tracers.b
 ω = Field(∂z(u) - ∂x(w))   # vorticity in the xz plane
+S = StrainRateTensorModulus(model)
 
 simulation.output_writers[:fields] = NetCDFWriter(model,
-    (; u, w, b, ω),
+    (; u, w, b, ω, S),
     schedule           = TimeInterval(2.0),
     filename           = "kelvin_helmholtz.nc",
     overwrite_existing = true)
