@@ -1,65 +1,55 @@
-using CairoMakie
-using NCDatasets
+using Oceananigans
+import NCDatasets
 
 # =============================================================================
-# Animate xz vorticity from hill_flow.jl output.
+# Animate hill_flow.jl output.
 # Run hill_flow.jl first to produce hill_flow.nc.
 # =============================================================================
 
-# --- Seamount geometry (must match hill_flow.jl) ---
-const Lx = 20.0
-const H  = 2.0
-const x₀ = Lx / 3
-const h₀ = 0.6H
-const σ  = Lx / 10
-hill(x) = h₀ * exp(-((x - x₀) / σ)^2) - H
+ωy_ts = FieldTimeSeries("hill_flow.nc", "ωy")
+ωz_ts = FieldTimeSeries("hill_flow.nc", "ωz")
+w_ts  = FieldTimeSeries("hill_flow.nc", "w")
 
-# --- Load data ---
-ds = NCDataset("hill_flow.nc")
+times = ωy_ts.times
+Nt    = length(times)
 
-x = ds["xC"][:]   # cell-center x
-z = ds["zC"][:]   # cell-center z
-t = ds["time"][:]
+Ny = size(ωy_ts, 2)   # ωy is Center in y → correct count for xz slice index
+Nz = size(ωz_ts, 3)   # ωz is Center in z → correct count for surface slice index
 
-# Fields are (x, y=1, z, time); squeeze the Flat y dimension.
-ω = dropdims(ds["ω"][:, 1, :, :], dims=2)   # (Nx, Nz, Nt)
-u = dropdims(ds["u"][:, 1, :, :], dims=2)
+using Statistics: quantile
+ωy_lim = max(quantile(abs.(vec(interior(ωy_ts, :, Ny÷2, :, :))), 0.98), eps())
+ωz_lim = max(quantile(abs.(vec(interior(ωz_ts, :, :, Nz,   :))), 0.98), eps())
+w_lim  = max(quantile(abs.(vec(interior(w_ts,  :, Ny÷2, :, :))), 0.98), eps())
 
-close(ds)
-
-Nt = length(t)
-
-# Mask immersed (below hill) cells with NaN
-for k in axes(ω, 2), i in axes(ω, 1)
-    if z[k] < hill(x[i])
-        ω[i, k, :] .= NaN
-        u[i, k, :] .= NaN
-    end
-end
-
-ω_lim = quantile(filter(!isnan, abs.(vec(ω))), 0.98)
-
-# --- Figure ---
-fig = Figure(size=(900, 420))
-
-ax = Axis(fig[1, 1];
-          title   = "Vorticity  ω = ∂ᵤu − ∂ₓw",
-          xlabel  = "x (m)",
-          ylabel  = "z (m)",
-          aspect  = DataAspect())
+# --- Figure layout ---
+using CairoMakie
+fig = Figure(size=(1000, 760))
 
 n = Observable(1)
-ω_plt = @lift ω[:, :, $n]
-title_str = @lift @sprintf("t = %.1f s", t[$n])
-Label(fig[0, 1], title_str, fontsize=18)
+title_str = @lift "t = " * prettytime(times[$n])
+Label(fig[0, 1:4], title_str, fontsize=18)
 
-hm = heatmap!(ax, x, z, ω_plt; colormap=:vik, colorrange=(-ω_lim, ω_lim))
-Colorbar(fig[1, 2], hm; label="ω (s⁻¹)")
+# Row 1: vertical cross-section (xz) at mid-domain y
+ax_ωy = Axis(fig[1, 1]; title="Vorticity  ωy = ∂ᵤu − ∂ₓw  (xz slice)", xlabel="x", ylabel="z", aspect=DataAspect())
+ax_w  = Axis(fig[1, 3]; title="Vertical velocity  w  (xz slice)", xlabel="x", ylabel="z", aspect=DataAspect())
 
-# Overlay hill profile
-x_fine = range(0, Lx, length=500)
-z_bottom = hill.(x_fine)
-band!(ax, x_fine, fill(-H, length(x_fine)), z_bottom; color=(:gray, 0.8))
+ωy_plt = @lift view(ωy_ts[$n], :, Ny÷2, :)
+w_plt  = @lift view(w_ts[$n], :, Ny÷2, :)
+
+hm_ωy = heatmap!(ax_ωy, ωy_plt; colormap=:vik, colorrange=(-ωy_lim, ωy_lim))
+hm_w  = heatmap!(ax_w,  w_plt;  colormap=:balance, colorrange=(-w_lim,  w_lim))
+
+Colorbar(fig[1, 2], hm_ωy; label="ωy (s⁻¹)", vertical=true)
+Colorbar(fig[1, 4], hm_w;  label="w (m s⁻¹)", vertical=true)
+
+# Row 2: surface (xy) vorticity
+ax_ωz = Axis(fig[2, 1:4]; title="Surface vorticity  ωz = ∂ₓv − ∂ᵧu", xlabel="x", ylabel="y", aspect=DataAspect())
+
+ωz_plt = @lift view(ωz_ts[$n], :, :, Nz÷4)
+
+hm_ωz = heatmap!(ax_ωz, ωz_plt; colormap=:vik, colorrange=(-ωz_lim, ωz_lim))
+
+Colorbar(fig[2, 4], hm_ωz; label="ωz (s⁻¹)", vertical=true)
 
 # --- Record animation ---
 record(fig, "hill_flow.mp4", 1:Nt; framerate=20) do nn
