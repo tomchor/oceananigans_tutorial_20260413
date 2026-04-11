@@ -15,12 +15,12 @@ using Printf
 # =============================================================================
 
 # --- Physical parameters ---
-θ₀  = 300.0    # K, reference potential temperature
-g   = 9.81     # m/s², gravitational acceleration
-α   = 1 / θ₀   # K⁻¹, thermal expansion coefficient (ideal gas: α = 1/θ₀)
-N²  = 1e-4     # s⁻², initial buoyancy frequency (weak stratification)
-Qᵀ  = 5e-2    # K m/s, kinematic surface heat flux (positive = warming)
-z₀  = 0.1meters  # aerodynamic roughness length (moderate terrain / farmland)
+θ₀  = 300.0     # K, reference potential temperature
+g   = 9.81      # m/s², gravitational acceleration
+α   = 1 / θ₀    # K⁻¹, thermal expansion coefficient (ideal gas: α = 1/θ₀)
+N²  = 1e-4      # s⁻², initial buoyancy frequency (weak stratification)
+Qᵀ  = 5e-2      # K m/s, kinematic surface heat flux (positive = warming)
+z₀  = 0.1meters # aerodynamic roughness length (moderate terrain / farmland)
 
 # --- Domain ---
 Lx = Ly = 4kilometers
