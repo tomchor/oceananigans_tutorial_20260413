@@ -1,89 +1,79 @@
 using Oceananigans
-using Oceananigans.Solvers: ConjugateGradientPoissonSolver
 using NCDatasets
 using Printf
 
 # =============================================================================
-# Flow past a Gaussian hill
+# Flow past a Gaussian hill (2D, xz)
 #
-# A 3-D nonhydrostatic simulation with open east/west boundaries.
-# A background flow U∞ enters from the west, goes over a hill, and exits
+# A nonhydrostatic simulation with open east/west boundaries.
+# A background flow U∞ enters from the west, passes over a hill, and exits
 # to the east.  The immersed boundary method handles the topography.
-#
-# Stratification (N² > 0) can be added to show internal wave generation.
 # =============================================================================
 
 # --- Physical parameters ---
 Lx = 20.0
-Ly = Lx/2
 H  = 2.0
 U∞ = 1.0
 z₀ = 1e-4       # roughness length (m)
 
-# Hill geometry (axisymmetric Gaussian, centered in the domain)
+# Hill geometry (Gaussian ridge, centered in the domain)
 x₀ = 0.0        # x center position
-h₀ = 0.6H       # peak height above the bottom
+h₀ = 0.4H       # peak height above the bottom
 σ  = Lx / 10    # horizontal half-width
 
-hill(x, y, p) = p.h₀ * exp(-((x - p.x₀)^2 + y^2) / p.σ^2) - p.H   # returns z_bottom(x, y)
+hill(x) = h₀ * exp(-((x - x₀) / σ)^2) - H   # returns z_bottom(x)
 
 # --- Grid ---
-Nx, Ny, Nz = 64, 64, 32
+Nx, Nz = 128, 32
 
-underlying_grid = RectilinearGrid(size     = (Nx, Ny, Nz),
-                                  x        = (-Lx/2, Lx/2),
-                                  y        = (-Ly/2, Ly/2),
-                                  z        = (0, H),
-                                  topology = (Bounded, Periodic, Bounded),
-                                  halo     = (6, 6, 6))
+underlying_grid = RectilinearGrid(size     = (Nx, Nz),
+                                  x        = (-Lx/3, 2Lx/3),
+                                  z        = (-H, 0),
+                                  topology = (Bounded, Flat, Bounded))
 
-# Drag coefficient from law of the wall (https://doi.org/10.1029/2005WR004685)
-const κᵛᵏ = 0.4    # von Kármán constant
+const κᵛᵏ = 0.4 # von Kármán constant
 z₁ = minimum_zspacing(underlying_grid, Center(), Center(), Center()) / 2
 Cd = (κᵛᵏ / log(z₁ / z₀))^2
 @info "z₁ = $z₁,  Cd = $Cd"
 
 hill_params = (; x₀, h₀, σ, H)
-grid = ImmersedBoundaryGrid(underlying_grid, GridFittedBottom((x, y) -> hill(x, y, hill_params)))
+grid = ImmersedBoundaryGrid(underlying_grid, GridFittedBottom(hill))
 
 # --- Boundary conditions ---
-drag  = BulkDrag(coefficient=Cd)
-u_bcs = FieldBoundaryConditions(west   = OpenBoundaryCondition(U∞),
-                                east   = OpenBoundaryCondition(U∞, scheme = PerturbationAdvection()),
-                                bottom = drag)
-v_bcs = FieldBoundaryConditions(bottom = drag)
+drag = BulkDrag(coefficient=Cd)
+u_bcs = FieldBoundaryConditions(west     = OpenBoundaryCondition(U∞), # Constant inflow
+                                east     = OpenBoundaryCondition(U∞, scheme = PerturbationAdvection()), # Perturbations get advected out
+                                bottom   = drag,
+                                immersed = drag)
 
 # --- Model ---
+using Oceananigans.Solvers: ConjugateGradientPoissonSolver
 model = NonhydrostaticModel(grid;
-                            #pressure_solver= ConjugateGradientPoissonSolver(grid; maxiter = 10),
-                            boundary_conditions = (u=u_bcs, v=v_bcs),
-                            advection           = WENO(order=5),
-                            timestepper         = :RungeKutta3)
+                            boundary_conditions = (u=u_bcs,),
+                            advection           = WENO(order=5), # Implitict dissipation
+                            timestepper         = :RungeKutta3,
+                            pressure_solver     = ConjugateGradientPoissonSolver(grid; maxiter = 10)) # More accurate results with immersed boundary
 
 set!(model, u=U∞)
 
 # --- Simulation ---
 Δt₀ = 0.1 * minimum_xspacing(grid) / U∞
-simulation = Simulation(model; Δt=Δt₀, stop_time=30)
-conjure_time_step_wizard!(simulation, cfl=0.8, IterationInterval(5))
+simulation = Simulation(model; Δt=Δt₀, stop_time=50)
+conjure_time_step_wizard!(simulation, cfl=0.5, IterationInterval(2))
 
-wall_clock = Ref(time_ns())
 function progress(sim)
     u = sim.model.velocities.u
-    elapsed = prettytime(1e-9 * (time_ns() - wall_clock[]))
-    @info @sprintf("t = %s, Δt = %s, max|u| = %.3f, elapsed wall time = %s",
-                   prettytime(time(sim)), prettytime(sim.Δt), maximum(abs, u), elapsed)
-    wall_clock[] = time_ns()
+    @info @sprintf("t = %s, Δt = %s, max|u| = %.3f",
+                   prettytime(time(sim)), prettytime(sim.Δt), maximum(abs, u))
 end
 add_callback!(simulation, progress, IterationInterval(100))
 
 # --- Output ---
 u, v, w = model.velocities
-ωy = Field(∂z(u) - ∂x(w))    # y-component of vorticity (in the xz plane)
-ωz = Field(∂x(v) - ∂y(u))    # z-component of vorticity (in the xy plane)
+ω = Field(∂z(u) - ∂x(w))   # vorticity in the xz plane
 
 simulation.output_writers[:fields] = NetCDFWriter(model,
-    (; u, v, w, ωy, ωz),
+    (; u, w, ω),
     schedule           = TimeInterval(0.5),
     filename           = "hill_flow.nc",
     overwrite_existing = true)
