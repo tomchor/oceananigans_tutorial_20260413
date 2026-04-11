@@ -52,13 +52,12 @@ T_bcs = FieldBoundaryConditions(bottom = FluxBoundaryCondition(Qᵀ))
 
 # --- Buoyancy: temperature via SeawaterBuoyancy with ideal-gas linear EOS ---
 # b = g · α · (T - T_ref),  β = 0 (dry atmosphere, no salinity)
-buoyancy = SeawaterBuoyancy(equation_of_state = LinearEquationOfState(thermal_expansion = α,
-                                                                       haline_contraction = 0),
-                             constant_salinity = 0)
+buoyancy = SeawaterBuoyancy(equation_of_state = LinearEquationOfState(thermal_expansion = α, haline_contraction = 0),
+                            constant_salinity = 0)
 
 # --- Model ---
 model = NonhydrostaticModel(grid;
-                            closure             = SmagorinskyLilly(),
+                            closure             = DynamicSmagorinsky(averaging = (1, 2)), # Planar averaged, dynamic Smagorinsky
                             advection           = WENO(order=5),
                             timestepper         = :RungeKutta3,
                             buoyancy            = buoyancy,
@@ -77,15 +76,11 @@ w★  = (g / θ₀ * Qᵀ * H)^(1/3)   # Deardorff velocity scale (m/s)
 simulation = Simulation(model; Δt=Δt₀, stop_time=4hours)
 conjure_time_step_wizard!(simulation, cfl=0.8, IterationInterval(5))
 
-wall_clock = Ref(time_ns())
 function progress(sim)
     w = sim.model.velocities.w
     T = sim.model.tracers.T
-    elapsed = prettytime(1e-9 * (time_ns() - wall_clock[]))
-    @info @sprintf("t = %s, Δt = %s, max|w| = %.2f m/s, T_sfc = %.3f K, wall time = %s",
-                   prettytime(time(sim)), prettytime(sim.Δt), maximum(abs, w),
-                   maximum(interior(T, :, :, 1)), elapsed)
-    wall_clock[] = time_ns()
+    @info @sprintf("t = %s, Δt = %s, max|w| = %.2f m/s, T_sfc = %.3f K",
+                   prettytime(time(sim)), prettytime(sim.Δt), maximum(abs, w), maximum(interior(T, :, :, 1)))
 end
 add_callback!(simulation, progress, IterationInterval(100))
 
@@ -96,8 +91,9 @@ T = model.tracers.T
 simulation.output_writers[:midlevel] = NetCDFWriter(model,
     (; u, v, w, T),
     schedule           = TimeInterval(2minutes),
-    filename           = "free_convection.nc",
+    filename           = "free_convection_xy.nc",
     indices            = (:, :, Nz÷4),     # lower-level (z ≈ H/4) horizontal slice
+    global_attributes  = Dict("z" => H/4),
     overwrite_existing = true)
 
 simulation.output_writers[:xz_slice] = NetCDFWriter(model,

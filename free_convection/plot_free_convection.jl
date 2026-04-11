@@ -10,8 +10,8 @@ using Statistics: quantile
 # =============================================================================
 
 # --- Load timeseries ---
-w_xy = FieldTimeSeries("free_convection.nc",    "w")
-T_xy = FieldTimeSeries("free_convection.nc",    "T")
+w_xy = FieldTimeSeries("free_convection_xy.nc", "w")
+T_xy = FieldTimeSeries("free_convection_xy.nc", "T")
 w_xz = FieldTimeSeries("free_convection_xz.nc", "w")
 T_xz = FieldTimeSeries("free_convection_xz.nc", "T")
 
