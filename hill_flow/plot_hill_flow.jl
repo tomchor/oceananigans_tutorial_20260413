@@ -1,8 +1,5 @@
 using Oceananigans
 import NCDatasets
-using Statistics: quantile
-using Printf
-using CairoMakie
 
 # =============================================================================
 # Animate hill_flow.jl output.
@@ -16,14 +13,17 @@ u_ts = FieldTimeSeries("hill_flow.nc", "u")
 times = ω_ts.times
 Nt    = length(times)
 
+using Statistics: quantile
 ω_lim = max(quantile(abs.(vec(interior(ω_ts, :, 1, :, :))), 0.98), eps())
 w_lim = max(quantile(abs.(vec(interior(w_ts, :, 1, :, :))), 0.98), eps())
 u_lim = max(quantile(abs.(vec(interior(u_ts, :, 1, :, :))), 0.98), eps())
 
 # --- Figure layout ---
+using GLMakie
 fig = Figure(size=(900, 500))
-
 n = Observable(1)
+
+using Printf
 title_str = @lift @sprintf("t = %.1f", times[$n])
 Label(fig[0, 1:2], title_str, fontsize=18)
 
