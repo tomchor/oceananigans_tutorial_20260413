@@ -19,7 +19,7 @@ z₀ = 1e-4       # roughness length (m)
 
 # Hill geometry (Gaussian ridge, centered in the domain)
 x₀ = 0.0        # x center position
-h₀ = 0.6H       # peak height above the bottom
+h₀ = 0.4H       # peak height above the bottom
 σ  = Lx / 10    # horizontal half-width
 
 hill(x) = h₀ * exp(-((x - x₀) / σ)^2) - H   # returns z_bottom(x)
@@ -43,10 +43,10 @@ hill_params = (; x₀, h₀, σ, H)
 grid = ImmersedBoundaryGrid(underlying_grid, GridFittedBottom(hill))
 
 # --- Boundary conditions ---
-drag  = BulkDrag(coefficient=Cd)
 u_bcs = FieldBoundaryConditions(west   = OpenBoundaryCondition(U∞),
                                 east   = OpenBoundaryCondition(U∞, scheme = PerturbationAdvection()),
-                                bottom = drag)
+                                bottom = BulkDrag(coefficient=Cd),
+                                immersed = BulkDrag(coefficient=Cd))
 
 # --- Model ---
 model = NonhydrostaticModel(grid;
@@ -59,16 +59,13 @@ set!(model, u=U∞)
 
 # --- Simulation ---
 Δt₀ = 0.1 * minimum_xspacing(grid) / U∞
-simulation = Simulation(model; Δt=Δt₀, stop_time=30)
-conjure_time_step_wizard!(simulation, cfl=0.8, IterationInterval(5))
+simulation = Simulation(model; Δt=Δt₀, stop_time=10)
+conjure_time_step_wizard!(simulation, cfl=0.5, IterationInterval(2))
 
-wall_clock = Ref(time_ns())
 function progress(sim)
     u = sim.model.velocities.u
-    elapsed = prettytime(1e-9 * (time_ns() - wall_clock[]))
-    @info @sprintf("t = %s, Δt = %s, max|u| = %.3f, elapsed wall time = %s",
-                   prettytime(time(sim)), prettytime(sim.Δt), maximum(abs, u), elapsed)
-    wall_clock[] = time_ns()
+    @info @sprintf("t = %s, Δt = %s, max|u| = %.3f",
+                   prettytime(time(sim)), prettytime(sim.Δt), maximum(abs, u))
 end
 add_callback!(simulation, progress, IterationInterval(100))
 
