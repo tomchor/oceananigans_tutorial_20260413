@@ -50,9 +50,9 @@ u_bcs = FieldBoundaryConditions(west     = OpenBoundaryCondition(U∞), # Consta
 using Oceananigans.Solvers: ConjugateGradientPoissonSolver
 model = NonhydrostaticModel(grid;
                             boundary_conditions = (u=u_bcs,),
-                            advection           = WENO(order=5),
+                            advection           = WENO(order=5), # Implitict dissipation
                             timestepper         = :RungeKutta3,
-                            pressure_solver     = ConjugateGradientPoissonSolver(grid; maxiter = 10))
+                            pressure_solver     = ConjugateGradientPoissonSolver(grid; maxiter = 10)) # More accurate results with immersed boundary
 
 set!(model, u=U∞)
 
