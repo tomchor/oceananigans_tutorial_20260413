@@ -1,5 +1,5 @@
 using Oceananigans
-using CairoMakie
+using GLMakie
 using Statistics: quantile
 
 # =============================================================================
