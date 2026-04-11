@@ -35,13 +35,13 @@ ax_u = Axis(fig[3, 1]; title="Horizontal velocity  u",      xlabel="x", ylabel="
 w_plt = @lift view(w_ts[$n], :, 1, :)
 u_plt = @lift view(u_ts[$n], :, 1, :)
 
-hm_ω = heatmap!(ax_ω, ω_plt; colormap=:vik,     colorrange=(-ω_lim, ω_lim))
-hm_w = heatmap!(ax_w, w_plt; colormap=:balance,  colorrange=(-w_lim, w_lim))
-hm_u = heatmap!(ax_u, u_plt; colormap=:thermal,  colorrange=(0, u_lim))
+hm_ω = heatmap!(ax_ω, ω_plt; colormap=:vik, colorrange=(-ω_lim, ω_lim), nan_color=:gray)
+hm_w = heatmap!(ax_w, w_plt; colormap=:balance,  colorrange=(-w_lim, w_lim), nan_color=:gray)
+hm_u = heatmap!(ax_u, u_plt; colormap=:thermal,  colorrange=(0, u_lim), nan_color=:gray)
 
-Colorbar(fig[1, 2], hm_ω; label="ω", vertical=true, height=Relative(0.3))
-Colorbar(fig[2, 2], hm_w; label="w", vertical=true, height=Relative(0.3))
-Colorbar(fig[3, 2], hm_u; label="u", vertical=true, height=Relative(0.3))
+Colorbar(fig[1, 2], hm_ω; label="ω", vertical=true, height=Relative(0.8))
+Colorbar(fig[2, 2], hm_w; label="w", vertical=true, height=Relative(0.8))
+Colorbar(fig[3, 2], hm_u; label="u", vertical=true, height=Relative(0.8))
 
 # --- Record animation ---
 record(fig, "hill_flow.mp4", 1:Nt; framerate=20) do nn
