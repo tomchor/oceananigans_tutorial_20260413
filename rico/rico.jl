@@ -50,7 +50,9 @@ T₀ = 299.8      # sea-surface temperature (K)
 ρv_bcs  = FieldBoundaryConditions(bottom = BulkDrag(coefficient = Cᴰ))
 
 # --- Sponge layer (damps w in upper 500 m) ---
-sponge = Relaxation(rate = 1/8, mask = GaussianMask{:z}(center = 3500, width = 500))
+# GaussianMask only has a 3-arg method (x,y,z) so we use a plain 2-arg function for 2D
+sponge_mask(x, z) = exp(-((z - 3500)^2) / (2 * 500^2))
+sponge = Relaxation(rate = 1/8, mask = sponge_mask)
 
 # --- Large-scale subsidence ---
 FT = eltype(grid)
